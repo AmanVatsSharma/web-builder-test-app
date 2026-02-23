@@ -1,15 +1,10 @@
-import { User } from '@clerk/nextjs/server'
-import React from 'react'
+import React from "react";
 import Image from "next/image";
-import Link from 'next/link';
-import AccountButton from '@/components/AccountButton';
-import { ModeToggle } from '@/components/global/ModeToggle';
+import Link from "next/link";
+import AccountButton from "@/components/AccountButton";
+import { ModeToggle } from "@/components/global/ModeToggle";
 
-type Props = {
-    user?: null | User
-}
-
-const Navigation = ({ user }: Props) => {
+const Navigation = () => {
     return (
         <div className="fixed top-0 right-0 left-0 p-4 flex items-center justify-between z-10">
             <aside className="flex items-center gap-2">
