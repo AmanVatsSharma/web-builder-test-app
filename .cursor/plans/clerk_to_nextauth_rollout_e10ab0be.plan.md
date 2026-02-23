@@ -4,7 +4,7 @@ overview: Replace Clerk with in-house NextAuth/Auth.js authentication across mid
 todos:
   - id: schema-auth-models
     content: Update Prisma schema for in-house auth and create migration (User password fields + Account/Session/VerificationToken).
-    status: pending
+    status: in_progress
   - id: nextauth-core
     content: Finalize NextAuth config with PrismaAdapter, credentials flow, and stable session payload.
     status: pending
