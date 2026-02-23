@@ -1,20 +1,19 @@
-import { getAuthUserDetails, verifyAndAcceptInvitation } from '@/lib/queries'
-import { currentUser } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import React from 'react'
+/**
+ * @file page.tsx
+ * @module agency
+ * @description Agency dashboard page - protected route
+ * @author BharatERP
+ * @created 2025-02-23
+ */
 
-const page = async () => {
-    const authUser = await currentUser()
-    if (!authUser) return redirect('agency/sign-in')
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-    // const agencyId = await verifyAndAcceptInvitation();
+const Page = async () => {
+  const session = await auth();
+  if (!session?.user) return redirect("/agency/sign-in");
 
-    // get user details 
-    // const user = await getAuthUserDetails();
+  return <div>agency page</div>;
+};
 
-    return (
-        <div>agency page</div>
-    )
-}
-
-export default page
+export default Page;

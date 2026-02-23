@@ -1,14 +1,19 @@
-import { currentUser } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import React from 'react'
+/**
+ * @file page.tsx
+ * @module app
+ * @description Root page - redirects based on auth state
+ * @author BharatERP
+ * @created 2025-02-23
+ */
 
-const page = async () => {
-    const authUser = await currentUser()
-    if (!authUser) return redirect('site')
-        if (authUser) return redirect('agency')
-  return (
-    <div>main page</div>
-  )
-}
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default page
+const Page = async () => {
+  const session = await auth();
+  if (!session?.user) return redirect("/site");
+  if (session.user) return redirect("/agency");
+  return <div>main page</div>;
+};
+
+export default Page;
