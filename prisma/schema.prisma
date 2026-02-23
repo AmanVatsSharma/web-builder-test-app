@@ -49,64 +49,20 @@ enum Icon {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  avatarUrl     String    @db.Text
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?   @db.Text
-  passwordHash  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  role          Role      @default(SUBACCOUNT_USER)
+  id           String         @id @default(uuid())
+  name         String
+  avatarUrl    String         @db.Text
+  email        String         @unique
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  role         Role           @default(SUBACCOUNT_USER)
   agencyId     String?
-  Agency        Agency?   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  Permissions   Permissions[]
-  Ticket        Ticket[]
-  Notification  Notification[]
-  accounts      Account[]
-  sessions      Session[]
+  Agency       Agency?        @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  Permissions  Permissions[]
+  Ticket       Ticket[]
+  Notification Notification[]
 
   @@index([agencyId])
-}
-
-model Account {
-  id                String  @id @default(uuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-}
-
-model Session {
-  id           String   @id @default(uuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@unique([identifier, token])
 }
 
 model Permissions {
