@@ -1,5 +1,4 @@
 import React from 'react'
-import { stripe } from '@/lib/stripe'
 import { addOnProducts, pricingCards } from '@/lib/constants'
 import { db } from '@/lib/db'
 import { Separator } from '@/components/ui/separator'
@@ -14,6 +13,8 @@ import {
 } from '@/components/ui/table'
 import clsx from 'clsx'
 import SubscriptionHelper from './_components/subscription-helper'
+import { getAgencyBillingSnapshot } from '@/lib/payments/actions'
+import { getGatewayDisplayName } from '@/lib/payments'
 
 type Props = {
   params: Promise<{ agencyId: string }>
@@ -21,63 +22,87 @@ type Props = {
 
 const page = async ({ params }: Props) => {
   const { agencyId } = await params
-  //CHALLENGE : Create the add on  products
-  const addOns = await stripe.products.list({
-    ids: addOnProducts.map((product) => product.id),
-    expand: ['data.default_price'],
-  })
-
   const agencySubscription = await db.agency.findUnique({
     where: {
       id: agencyId,
     },
     select: {
       customerId: true,
+      billingCustomerId: true,
+      billingGateway: true,
       Subscription: true,
     },
   })
-
-  const prices = await stripe.prices.list({
-    product: process.env.NEXT_PLURA_PRODUCT_ID,
-    active: true,
-  })
+  const billingSnapshot = await getAgencyBillingSnapshot(agencyId)
+  const gatewayName = getGatewayDisplayName(billingSnapshot.gateway)
+  const customerId =
+    billingSnapshot.customerId ||
+    agencySubscription?.billingCustomerId ||
+    agencySubscription?.customerId ||
+    ''
+  const prices = billingSnapshot.plans.map((price) => ({
+    id: price.id,
+    nickname: price.nickname,
+    unit_amount: price.unitAmount,
+    currency: price.currency.toLowerCase(),
+    recurring:
+      price.interval === 'one_time'
+        ? null
+        : {
+            interval: price.interval,
+          },
+  }))
+  const addOns = billingSnapshot.addOns.map((price) => ({
+    id: price.id,
+    name: addOnProducts.find((product) => product.id === price.id)?.title || price.nickname,
+    default_price: {
+      id: price.id,
+      unit_amount: price.unitAmount,
+      recurring:
+        price.interval === 'one_time'
+          ? null
+          : {
+              interval: price.interval,
+            },
+    },
+  }))
 
   const currentPlanDetails = pricingCards.find(
     (c) => c.priceId === agencySubscription?.Subscription?.priceId
   )
 
-  const charges = await stripe.charges.list({
-    limit: 50,
-    customer: agencySubscription?.customerId,
-  })
-
   const allCharges = [
-    ...charges.data.map((charge) => ({
+    ...billingSnapshot.charges.map((charge) => ({
       description: charge.description,
       id: charge.id,
-      date: `${new Date(charge.created * 1000).toLocaleTimeString()} ${new Date(
-        charge.created * 1000
+      date: `${new Date(charge.createdAtUnix * 1000).toLocaleTimeString()} ${new Date(
+        charge.createdAtUnix * 1000
       ).toLocaleDateString()}`,
-      status: 'Paid',
-      amount: `$${charge.amount / 100}`,
+      status: charge.status,
+      amount: `${charge.currency} ${charge.amount.toFixed(2)}`,
     })),
   ]
 
   return (
     <>
       <SubscriptionHelper
-        prices={prices.data}
-        customerId={agencySubscription?.customerId || ''}
+        prices={prices}
+        customerId={customerId}
+        gateway={billingSnapshot.gateway}
         planExists={agencySubscription?.Subscription?.active === true}
       />
       <h1 className="text-4xl p-4">Billing</h1>
+      <p className="px-4 text-sm text-muted-foreground">
+        Active billing gateway: {gatewayName}
+      </p>
       <Separator className=" mb-6" />
       <h2 className="text-2xl p-4">Current Plan</h2>
       <div className="flex flex-col lg:!flex-row justify-between gap-8">
         <PricingCard
+          gateway={billingSnapshot.gateway}
           planExists={agencySubscription?.Subscription?.active === true}
-          prices={prices.data}
-          customerId={agencySubscription?.customerId || ''}
+          prices={prices}
+          customerId={customerId}
           amt={
             agencySubscription?.Subscription?.active === true
               ? currentPlanDetails?.price || '$0'
@@ -111,17 +136,16 @@ const page = async ({ params }: Props) => {
               : 'Starter'
           }
         />
-        {addOns.data.map((addOn) => (
+        {addOns.map((addOn) => (
           <PricingCard
+            gateway={billingSnapshot.gateway}
             planExists={agencySubscription?.Subscription?.active === true}
-            prices={prices.data}
-            customerId={agencySubscription?.customerId || ''}
+            prices={prices}
+            customerId={customerId}
             key={addOn.id}
             amt={
-              //@ts-ignore
               addOn.default_price?.unit_amount
-                ? //@ts-ignore
-                  `$${addOn.default_price.unit_amount / 100}`
+                ? `$${addOn.default_price.unit_amount / 100}`
                 : '$0'
             }
             buttonCta="Subscribe"

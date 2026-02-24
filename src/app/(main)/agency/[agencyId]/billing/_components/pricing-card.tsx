@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { PaymentGatewayCode } from '@/lib/payments'
 import { PricesList } from '@/lib/types'
 import { useModal } from '@/providers/modal-provider'
 import { useSearchParams } from 'next/navigation'
@@ -25,6 +26,7 @@ type Props = {
   highlightTitle: string
   highlightDescription: string
   customerId: string
+  gateway: PaymentGatewayCode
   prices: PricesList['data']
   planExists: boolean
 }
@@ -33,6 +35,7 @@ const PricingCard = ({
   amt,
   buttonCta,
   customerId,
+  gateway,
   description,
   duration,
   features,
@@ -54,6 +57,7 @@ const PricingCard = ({
       >
         <SubscriptionFormWrapper
           customerId={customerId}
+          gateway={gateway}
           planExists={planExists}
         />
       </CustomModal>,
