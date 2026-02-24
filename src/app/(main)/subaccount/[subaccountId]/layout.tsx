@@ -28,11 +28,13 @@ const SubaccountLayout = async ({ children, params }: Props) => {
   if (!user.role) {
     return <Unauthorized />
   } else {
+    const isAgencyPrivileged =
+      user.role === 'AGENCY_ADMIN' || user.role === 'AGENCY_OWNER'
     const hasPermission = user.Permissions.find(
       (permissions) =>
         permissions.access && permissions.subAccountId === subaccountId
     )
-    if (!hasPermission) {
+    if (!hasPermission && !isAgencyPrivileged) {
       return <Unauthorized />
     }
 

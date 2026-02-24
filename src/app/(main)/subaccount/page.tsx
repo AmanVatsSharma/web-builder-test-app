@@ -18,9 +18,12 @@ const SubAccountMainPage = async ({ searchParams }: Props) => {
   const user = await getAuthUserDetails()
   if (!user) return
 
-  const getFirstSubaccountWithAccess = user.Permissions.find(
-    (permission) => permission.access === true
-  )
+  const isAgencyPrivileged =
+    user.role === 'AGENCY_OWNER' || user.role === 'AGENCY_ADMIN'
+  const firstSubaccountIdForRedirect = isAgencyPrivileged
+    ? user.Agency?.SubAccount[0]?.id
+    : user.Permissions.find((permission) => permission.access === true)
+        ?.subAccountId
 
   if (state) {
     const statePath = state.split('___')[0]
@@ -31,8 +34,8 @@ const SubAccountMainPage = async ({ searchParams }: Props) => {
     )
   }
 
-  if (getFirstSubaccountWithAccess) {
-    return redirect(`/subaccount/${getFirstSubaccountWithAccess.subAccountId}`)
+  if (firstSubaccountIdForRedirect) {
+    return redirect(`/subaccount/${firstSubaccountIdForRedirect}`)
   }
 
   return <Unauthorized />

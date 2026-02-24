@@ -7,12 +7,15 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { db } from '@/lib/db'
-import { getStripeOAuthLink } from '@/lib/utils'
+import {
+  getAgencyPayoutProvider,
+  getGatewayDisplayName,
+  upsertAgencyConnectAccount,
+} from '@/lib/payments'
 import { CheckCircleIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
-import { stripe } from '@/lib/stripe'
 
 type Props = {
   params: Promise<{
@@ -29,6 +32,8 @@ const LaunchPadPage = async ({ params, searchParams }: Props) => {
   })
 
   if (!agencyDetails) return
+  const paymentContext = await getAgencyPayoutProvider(agencyId)
+  const gatewayName = getGatewayDisplayName(paymentContext.gateway)
 
   const allDetailsExist =
     agencyDetails.address &&
@@ -42,27 +47,25 @@ const LaunchPadPage = async ({ params, searchParams }: Props) => {
     agencyDetails.state &&
     agencyDetails.zipCode
 
-  const stripeOAuthLink = getStripeOAuthLink(
+  const paymentOAuthLink = paymentContext.provider.getConnectOAuthLink(
     'agency',
     `launchpad___${agencyDetails.id}`
   )
 
-  let connectedStripeAccount = false
+  let connectedPaymentAccount = false
 
   if (code) {
-    if (!agencyDetails.connectAccountId) {
+    if (!paymentContext.accountId) {
       try {
-        const response = await stripe.oauth.token({
-          grant_type: 'authorization_code',
-          code,
-        })
-        await db.agency.update({
-          where: { id: agencyId },
-          data: { connectAccountId: response.stripe_user_id },
-        })
-        connectedStripeAccount = true
+        const response = await paymentContext.provider.exchangeConnectCode(code)
+        await upsertAgencyConnectAccount(
+          agencyId,
+          response.accountId,
+          paymentContext.gateway
+        )
+        connectedPaymentAccount = true
       } catch (error) {
-        console.log('🔴 Could not connect stripe account')
+        console.log(`🔴 Could not connect ${gatewayName} account`)
       }
     }
   }
@@ -101,22 +104,33 @@ const LaunchPadPage = async ({ params, searchParams }: Props) => {
                   className="rounded-md object-contain"
                 />
                 <p>
-                  Connect your stripe account to accept payments and see your
+                  Connect your {gatewayName} account to accept payments and see your
                   dashboard.
                 </p>
               </div>
-              {agencyDetails.connectAccountId || connectedStripeAccount ? (
+              {paymentContext.accountId || connectedPaymentAccount ? (
                 <CheckCircleIcon
                   size={50}
                   className=" text-primary p-2 flex-shrink-0"
                 />
               ) : (
-                <Link
-                  className="bg-primary py-2 px-4 rounded-md text-white"
-                  href={stripeOAuthLink}
-                >
-                  Start
-                </Link>
+                <>
+                  {paymentOAuthLink ? (
+                    <Link
+                      className="bg-primary py-2 px-4 rounded-md text-white"
+                      href={paymentOAuthLink}
+                    >
+                      Start
+                    </Link>
+                  ) : (
+                    <Link
+                      className="bg-primary py-2 px-4 rounded-md text-white"
+                      href={`/agency/${agencyId}/settings`}
+                    >
+                      Set in Settings
+                    </Link>
+                  )}
+                </>
               )}
             </div>
             <div className="flex justify-between items-center w-full border p-4 rounded-lg gap-2">
