@@ -78,25 +78,6 @@ module.exports = withUt({
             inverted: colors.gray[950],
           },
         },
-        boxShadow: {
-          // light
-          'tremor-input': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-          'tremor-card':
-            '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-          'tremor-dropdown':
-            '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-          // dark
-          'dark-tremor-input': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-          'dark-tremor-card':
-            '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-          'dark-tremor-dropdown':
-            '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        },
-        borderRadius: {
-          'tremor-small': '0.375rem',
-          'tremor-default': '0.5rem',
-          'tremor-full': '9999px',
-        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -131,10 +112,42 @@ module.exports = withUt({
           foreground: 'hsl(var(--card-foreground))',
         },
       },
+      boxShadow: {
+        // light
+        'tremor-input': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        'tremor-card':
+          '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+        'tremor-dropdown':
+          '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        // dark
+        'dark-tremor-input': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        'dark-tremor-card':
+          '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+        'dark-tremor-dropdown':
+          '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        'editor-soft':
+          '0 1px 2px rgb(15 23 42 / 0.06), 0 6px 16px rgb(15 23 42 / 0.08)',
+        'editor-card':
+          '0 10px 30px rgb(15 23 42 / 0.12), 0 2px 8px rgb(15 23 42 / 0.08)',
+      },
       borderRadius: {
+        'tremor-small': '0.375rem',
+        'tremor-default': '0.5rem',
+        'tremor-full': '9999px',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xl: 'calc(var(--radius) + 4px)',
+        '2xl': 'calc(var(--radius) + 8px)',
+      },
+      maxWidth: {
+        'editor-mobile': '420px',
+        'editor-tablet': '850px',
+        'editor-desktop': '1200px',
+      },
+      spacing: {
+        18: '4.5rem',
+        22: '5.5rem',
       },
       keyframes: {
         'accordion-down': {
