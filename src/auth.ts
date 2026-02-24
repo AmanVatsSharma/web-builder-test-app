@@ -9,9 +9,13 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
+  trustHost: true,
+  secret: process.env.AUTH_SECRET,
   session: {
     strategy: "database",
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -46,22 +50,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
+          role: user.role,
           image: user.image ?? user.avatarUrl ?? undefined,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
+    async session({ session }) {
+      if (!session.user?.email) {
+        return session;
       }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
+
+      const user = await db.user.findUnique({
+        where: { email: session.user.email },
+        select: {
+          id: true,
+          role: true,
+          image: true,
+          avatarUrl: true,
+        },
+      });
+
+      if (session.user && user) {
+        session.user.id = user.id;
+        session.user.role = user.role;
+        session.user.image = user.image ?? user.avatarUrl ?? session.user.image;
       }
+
       return session;
     },
   },
