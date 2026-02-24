@@ -22,3 +22,4 @@
 - Fixed Agency Owner/Admin subaccount access gating so sidebar switching and subaccount routes do not depend on per-subaccount permission rows.
 - Fixed persistent sidebar click-lock by allowing `SheetContent` to disable overlay for always-open desktop/editor sidebars.
 - Raised desktop sidebar z-index above dashboard blur layers so left navigation links remain clickable.
+- Removed duplicate mobile menu triggers by rendering the Sheet trigger only for the mobile sidebar instance.

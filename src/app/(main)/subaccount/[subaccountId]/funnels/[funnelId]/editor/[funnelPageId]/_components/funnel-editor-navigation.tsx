@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
@@ -118,29 +118,32 @@ const FunnelEditorNavigation = ({
     <TooltipProvider>
       <nav
         className={clsx(
-          'border-b-[1px] flex items-center justify-between p-6 gap-2 transition-all',
+          'builder-top-nav relative z-[30] flex h-[88px] items-center justify-between gap-4 px-4 md:px-6 transition-all',
           { '!h-0 !p-0 !overflow-hidden': state.editor.previewMode }
         )}
       >
-        <aside className="flex items-center gap-4 max-w-[260px] w-[300px]">
-          <Link href={`/subaccount/${subaccountId}/funnels/${funnelId}`}>
-            <ArrowLeftCircle />
+        <aside className="flex w-[320px] max-w-[40%] items-center gap-3">
+          <Link
+            href={`/subaccount/${subaccountId}/funnels/${funnelId}`}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-card text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeftCircle size={18} />
           </Link>
-          <div className="flex flex-col w-full ">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <Input
               defaultValue={funnelPageDetails.name}
-              className="border-none h-5 m-0 p-0 text-lg"
+              className="h-8 border-0 bg-transparent p-0 text-base font-semibold tracking-tight shadow-none focus-visible:ring-0"
               onBlur={handleOnBlurTitleChange}
             />
-            <span className="text-sm text-muted-foreground">
+            <span className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground/90">
               Path: /{funnelPageDetails.pathName}
             </span>
           </div>
         </aside>
-        <aside>
+        <aside className="hidden md:block">
           <Tabs
             defaultValue="Desktop"
-            className="w-fit "
+            className="w-fit"
             value={state.editor.device}
             onValueChange={(value) => {
               dispatch({
@@ -149,14 +152,14 @@ const FunnelEditorNavigation = ({
               })
             }}
           >
-            <TabsList className="grid w-full grid-cols-3 bg-transparent h-fit">
+            <TabsList className="grid h-10 w-full grid-cols-3 gap-1 rounded-xl border border-border/70 bg-card p-1 shadow-sm">
               <Tooltip>
                 <TooltipTrigger>
                   <TabsTrigger
                     value="Desktop"
-                    className="data-[state=active]:bg-muted w-10 h-10 p-0"
+                    className="h-8 w-9 rounded-lg p-0 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-none"
                   >
-                    <Laptop />
+                    <Laptop size={16} />
                   </TabsTrigger>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -167,9 +170,9 @@ const FunnelEditorNavigation = ({
                 <TooltipTrigger>
                   <TabsTrigger
                     value="Tablet"
-                    className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                    className="h-8 w-9 rounded-lg p-0 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-none"
                   >
-                    <Tablet />
+                    <Tablet size={16} />
                   </TabsTrigger>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -180,9 +183,9 @@ const FunnelEditorNavigation = ({
                 <TooltipTrigger>
                   <TabsTrigger
                     value="Mobile"
-                    className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                    className="h-8 w-9 rounded-lg p-0 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-none"
                   >
-                    <Smartphone />
+                    <Smartphone size={16} />
                   </TabsTrigger>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -196,19 +199,19 @@ const FunnelEditorNavigation = ({
           <Button
             variant={'ghost'}
             size={'icon'}
-            className="hover:bg-slate-800"
+            className="h-9 w-9 rounded-xl border border-border/70 bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
             onClick={handlePreviewClick}
           >
-            <EyeIcon />
+            <EyeIcon size={16} />
           </Button>
           <Button
             disabled={!(state.history.currentIndex > 0)}
             onClick={handleUndo}
             variant={'ghost'}
             size={'icon'}
-            className="hover:bg-slate-800"
+            className="h-9 w-9 rounded-xl border border-border/70 bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
           >
-            <Undo2 />
+            <Undo2 size={16} />
           </Button>
           <Button
             disabled={
@@ -217,24 +220,29 @@ const FunnelEditorNavigation = ({
             onClick={handleRedo}
             variant={'ghost'}
             size={'icon'}
-            className="hover:bg-slate-800 mr-4"
+            className="mr-2 h-9 w-9 rounded-xl border border-border/70 bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
           >
-            <Redo2 />
+            <Redo2 size={16} />
           </Button>
-          <div className="flex flex-col item-center mr-4">
-            <div className="flex flex-row items-center gap-4">
-              Draft
+          <div className="hidden md:flex min-w-[220px] flex-col rounded-xl border border-border/70 bg-card px-3 py-2 shadow-sm">
+            <div className="flex flex-row items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <span>Draft</span>
               <Switch
                 disabled
                 defaultChecked={true}
               />
-              Publish
+              <span>Publish</span>
             </div>
-            <span className="text-muted-foreground text-sm">
+            <span className="mt-1 text-[11px] text-muted-foreground">
               Last updated {funnelPageDetails.updatedAt.toLocaleDateString()}
             </span>
           </div>
-          <Button onClick={handleOnSave}>Save</Button>
+          <Button
+            onClick={handleOnSave}
+            className="h-9 rounded-xl px-5 font-semibold shadow-editor-soft"
+          >
+            Save
+          </Button>
         </aside>
       </nav>
     </TooltipProvider>

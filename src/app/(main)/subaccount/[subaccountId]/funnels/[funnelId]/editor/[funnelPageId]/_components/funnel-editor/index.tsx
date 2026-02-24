@@ -52,13 +52,20 @@ const FunnelEditor = ({ funnelPageId, liveMode }: Props) => {
   return (
     <div
       className={clsx(
-        'use-automation-zoom-in h-full overflow-scroll mr-[385px] bg-background transition-all rounded-md',
+        'builder-canvas-shell use-automation-zoom-in relative h-full w-full overflow-x-hidden overflow-y-auto transition-all duration-200',
         {
-          '!p-0 !mr-0':
+          '!rounded-none !border-0 !shadow-none !bg-transparent':
             state.editor.previewMode === true || state.editor.liveMode === true,
-          '!w-[850px]': state.editor.device === 'Tablet',
-          '!w-[420px]': state.editor.device === 'Mobile',
-          'w-full': state.editor.device === 'Desktop',
+          'p-0': state.editor.previewMode === true || state.editor.liveMode === true,
+          'p-4 md:p-6':
+            state.editor.previewMode === false && state.editor.liveMode === false,
+          'max-w-editor-tablet':
+            state.editor.device === 'Tablet' && !state.editor.liveMode,
+          'max-w-editor-mobile':
+            state.editor.device === 'Mobile' && !state.editor.liveMode,
+          'max-w-editor-desktop':
+            state.editor.device === 'Desktop' && !state.editor.liveMode,
+          'max-w-none': state.editor.liveMode,
         }
       )}
       onClick={handleClick}
@@ -67,7 +74,7 @@ const FunnelEditor = ({ funnelPageId, liveMode }: Props) => {
         <Button
           variant={'ghost'}
           size={'icon'}
-          className="w-6 h-6 bg-slate-600 p-[2px] fixed top-0 left-0 z-[100]"
+          className="fixed left-4 top-4 z-[100] h-8 w-8 rounded-full border border-border/70 bg-card p-[2px] text-foreground shadow-editor-soft hover:bg-muted"
           onClick={handleUnpreview}
         >
           <EyeOff />

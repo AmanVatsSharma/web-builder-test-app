@@ -28,22 +28,23 @@ const Page = async ({ params }: Props) => {
   }
 
   return (
-    <div className="fixed top-0 bottom-0 left-0 right-0 z-[20] bg-background overflow-hidden">
+    <div className="fixed inset-0 z-[20] overflow-hidden builder-shell-bg">
       <EditorProvider
         subaccountId={subaccountId}
         funnelId={funnelId}
         pageDetails={funnelPageDetails}
       >
-        <FunnelEditorNavigation
-          funnelId={funnelId}
-          funnelPageDetails={funnelPageDetails}
-          subaccountId={subaccountId}
-        />
-        <div className="h-full flex justify-center">
-          <FunnelEditor funnelPageId={funnelPageId} />
+        <div className="flex h-full flex-col">
+          <FunnelEditorNavigation
+            funnelId={funnelId}
+            funnelPageDetails={funnelPageDetails}
+            subaccountId={subaccountId}
+          />
+          <div className="relative flex flex-1 justify-center overflow-hidden px-4 pb-4 pt-3 md:px-6 md:pb-6">
+            <FunnelEditor funnelPageId={funnelPageId} />
+          </div>
+          <FunnelEditorSidebar subaccountId={subaccountId} />
         </div>
-
-        <FunnelEditorSidebar subaccountId={subaccountId} />
       </EditorProvider>
     </div>
   )
