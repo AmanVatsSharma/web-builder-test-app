@@ -6,7 +6,7 @@
  * @created 2026-02-24
  */
 
-const { PrismaClient, Plan, Role } = require("@prisma/client");
+const { PrismaClient, PaymentGateway, Plan, Role } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
@@ -158,6 +158,10 @@ const seedConfig = {
     connectAccountId:
       process.env.SEED_AGENCY_CONNECT_ACCOUNT_ID ?? "acct_demo_seed_agency",
     customerId: process.env.SEED_AGENCY_CUSTOMER_ID ?? "cus_demo_seed_agency",
+    billingGateway:
+      process.env.SEED_AGENCY_BILLING_GATEWAY ?? PaymentGateway.STRIPE,
+    payoutGateway:
+      process.env.SEED_AGENCY_PAYOUT_GATEWAY ?? PaymentGateway.STRIPE,
   },
   subAccount: {
     id: process.env.SEED_SUBACCOUNT_ID ?? seedIds.subAccount,
@@ -173,6 +177,8 @@ const seedConfig = {
     connectAccountId:
       process.env.SEED_SUBACCOUNT_CONNECT_ACCOUNT_ID ??
       "acct_demo_seed_subaccount",
+    paymentGateway:
+      process.env.SEED_SUBACCOUNT_PAYMENT_GATEWAY ?? PaymentGateway.STRIPE,
   },
   stripe: {
     subscriptionId:
@@ -233,6 +239,10 @@ async function upsertAgency(config, ownerEmail) {
     goal: 5,
     connectAccountId: config.connectAccountId,
     customerId: config.customerId,
+    billingGateway: config.billingGateway,
+    billingCustomerId: config.customerId,
+    payoutGateway: config.payoutGateway,
+    payoutAccountId: config.connectAccountId,
   };
 
   return prisma.agency.upsert({
@@ -278,6 +288,8 @@ async function upsertSubAccount(config, agencyId) {
     state: config.state,
     country: config.country,
     connectAccountId: config.connectAccountId,
+    paymentGateway: config.paymentGateway,
+    paymentAccountId: config.connectAccountId,
     agencyId,
   };
 
@@ -584,10 +596,12 @@ async function upsertStripeDemoData({ agencyId, customerId, stripeConfig }) {
     plan: resolvePlanValue(stripeConfig.plan),
     price: "Unlimited SaaS (Seed Demo)",
     active: true,
+    paymentGateway: PaymentGateway.STRIPE,
     priceId: stripeConfig.priceId,
     customerId,
     currentPeriodEndDate,
     subscritiptionId: stripeConfig.subscriptionId,
+    gatewaySubscriptionId: stripeConfig.subscriptionId,
     agencyId,
   };
 
@@ -660,14 +674,17 @@ async function main() {
   process.stdout.write("Seed completed successfully.\n");
   process.stdout.write(`Agency: ${agency.name} (${agency.id})\n`);
   process.stdout.write(
-    `Agency Stripe (demo): customer=${agency.customerId}, connect=${agency.connectAccountId}\n`
+    `Agency Billing (demo): gateway=${agency.billingGateway}, customer=${agency.billingCustomerId}\n`
+  );
+  process.stdout.write(
+    `Agency Payouts (demo): gateway=${agency.payoutGateway}, account=${agency.payoutAccountId}\n`
   );
   process.stdout.write(`Subaccount: ${subAccount.name} (${subAccount.id})\n`);
   process.stdout.write(
-    `Subaccount Stripe (demo): connect=${subAccount.connectAccountId}\n`
+    `Subaccount Payments (demo): gateway=${subAccount.paymentGateway}, account=${subAccount.paymentAccountId}\n`
   );
   process.stdout.write(
-    `Subscription: ${subscription.subscritiptionId} (price=${subscription.priceId}, active=${subscription.active})\n`
+    `Subscription: ${subscription.gatewaySubscriptionId} (gateway=${subscription.paymentGateway}, price=${subscription.priceId}, active=${subscription.active})\n`
   );
   process.stdout.write("Users:\n");
   for (const user of seededUsers) {

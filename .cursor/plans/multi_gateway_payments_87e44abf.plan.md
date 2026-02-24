@@ -4,25 +4,25 @@ overview: Introduce a provider-based payments architecture that supports Stripe 
 todos:
   - id: audit-and-contracts
     content: Define provider-neutral payment contracts and factory in src/lib/payments with Stripe parity first.
-    status: in_progress
+    status: completed
   - id: schema-migration
     content: Add PaymentGateway-based schema fields and migration to map existing Stripe IDs safely.
-    status: pending
+    status: completed
   - id: api-generic-routes
     content: Create /api/payments routes and move webhook handling to gateway-specific handlers.
-    status: pending
+    status: completed
   - id: razorpay-provider
     content: Implement Razorpay provider for customer/subscription/checkout/webhooks with normalized responses.
-    status: pending
+    status: completed
   - id: ui-gateway-selection
     content: Add manual gateway selection in agency/subaccount settings and use it in billing/funnel flows.
-    status: pending
+    status: completed
   - id: launchpad-generalization
     content: Generalize launchpad onboarding from Stripe-only to provider-specific connect/onboarding actions.
-    status: pending
+    status: completed
   - id: tests-and-rollout
     content: Add regression/integration coverage and execute phased rollout with backward-compatible Stripe wrappers.
-    status: pending
+    status: completed
 isProject: false
 ---
 

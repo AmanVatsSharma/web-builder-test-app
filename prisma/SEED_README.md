@@ -27,14 +27,20 @@ prisma db seed
 - `AGENCY_ADMIN` -> `admin@example.com` / `Admin@12345`
 - `SUBACCOUNT_USER` -> `member@example.com` / `Member@12345`
 
-### Stripe demo fields (DB-only seed)
+### Payment demo fields (DB-only seed)
 
-- Agency `connectAccountId`: `acct_demo_seed_agency`
-- Agency `customerId`: `cus_demo_seed_agency`
-- Subaccount `connectAccountId`: `acct_demo_seed_subaccount`
+- Agency billing:
+  - `billingGateway`: `STRIPE`
+  - `billingCustomerId`: `cus_demo_seed_agency`
+- Agency payouts:
+  - `payoutGateway`: `STRIPE`
+  - `payoutAccountId`: `acct_demo_seed_agency`
+- Subaccount checkout account:
+  - `paymentGateway`: `STRIPE`
+  - `paymentAccountId`: `acct_demo_seed_subaccount`
 - Active subscription seeded for the agency with default price:
   - `priceId`: `price_1OYxkqFj9oKEERu1KfJGWxgN`
-  - `subscritiptionId`: `sub_demo_seed_agency`
+  - `gatewaySubscriptionId`: `sub_demo_seed_agency`
 
 ### Extra demo records
 
@@ -64,10 +70,12 @@ Common overrides:
 - `SEED_AGENCY_PHONE`, `SEED_AGENCY_ADDRESS`, `SEED_AGENCY_CITY`
 - `SEED_AGENCY_ZIP`, `SEED_AGENCY_STATE`, `SEED_AGENCY_COUNTRY`
 - `SEED_AGENCY_CONNECT_ACCOUNT_ID`, `SEED_AGENCY_CUSTOMER_ID`
+- `SEED_AGENCY_BILLING_GATEWAY`, `SEED_AGENCY_PAYOUT_GATEWAY`
 - `SEED_SUBACCOUNT_ID`, `SEED_SUBACCOUNT_NAME`, `SEED_SUBACCOUNT_EMAIL`
 - `SEED_SUBACCOUNT_PHONE`, `SEED_SUBACCOUNT_ADDRESS`, `SEED_SUBACCOUNT_CITY`
 - `SEED_SUBACCOUNT_ZIP`, `SEED_SUBACCOUNT_STATE`, `SEED_SUBACCOUNT_COUNTRY`
 - `SEED_SUBACCOUNT_CONNECT_ACCOUNT_ID`
+- `SEED_SUBACCOUNT_PAYMENT_GATEWAY`
 - `SEED_STRIPE_SUBSCRIPTION_ID`, `SEED_STRIPE_PRICE_ID`, `SEED_STRIPE_PLAN`, `SEED_STRIPE_PERIOD_DAYS`
 
 Example:
