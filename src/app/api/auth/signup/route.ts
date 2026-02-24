@@ -36,8 +36,11 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
+      const errorMessage = existingUser.passwordHash
+        ? "An account with this email already exists"
+        : "Account already exists. Please set your password using reset password.";
       return NextResponse.json(
-        { error: "An account with this email already exists" },
+        { error: errorMessage },
         { status: 409 }
       );
     }
@@ -50,6 +53,8 @@ export async function POST(request: Request) {
         email,
         passwordHash,
         avatarUrl: "",
+        image: null,
+        emailVerified: new Date(),
       },
     });
 
