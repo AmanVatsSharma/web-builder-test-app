@@ -7,17 +7,19 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { pricingCards } from '@/lib/constants'
-import { stripe } from '@/lib/stripe'
+import { isStripeConfigured, stripe } from '@/lib/stripe'
 import clsx from 'clsx'
 import { Check } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
 export default async function Home() {
-  const prices = await stripe.prices.list({
-    product: process.env.NEXT_PLURA_PRODUCT_ID,
-    active: true,
-  })
+  const prices = isStripeConfigured
+    ? await stripe.prices.list({
+        product: process.env.NEXT_PLURA_PRODUCT_ID,
+        active: true,
+      })
+    : null
 
   return (
     <>
@@ -51,7 +53,7 @@ export default async function Home() {
           ready to commit you can get started for free.
         </p>
         <div className="flex  justify-center gap-4 flex-wrap mt-6">
-          {prices.data.map((card) => (
+          {prices?.data.map((card) => (
             //WIP: Wire up free product from stripe
             <Card
               key={card.nickname}
