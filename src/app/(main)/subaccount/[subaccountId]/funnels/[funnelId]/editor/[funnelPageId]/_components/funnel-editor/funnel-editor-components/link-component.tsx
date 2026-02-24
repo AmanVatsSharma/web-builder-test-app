@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { Trash } from 'lucide-react'
 import Link from 'next/link'
 
-import React, { useRef } from 'react'
+import React from 'react'
 
 type Props = {
   element: EditorElement
@@ -47,19 +47,21 @@ const LinkComponent = (props: Props) => {
       onDragStart={(e) => handleDragStart(e, 'text')}
       onClick={handleOnClickBody}
       className={clsx(
-        'p-[2px] w-full m-[5px] relative text-[16px] transition-all',
+        'builder-element-base my-2 w-full px-3 py-2 text-base leading-relaxed',
         {
-          '!border-blue-500':
-            state.editor.selectedElement.id === props.element.id,
-
-          '!border-solid': state.editor.selectedElement.id === props.element.id,
-          'border-dashed border-[1px] border-slate-300': !state.editor.liveMode,
+          '!border-primary !ring-2 !ring-primary/20':
+            state.editor.selectedElement.id === props.element.id &&
+            !state.editor.liveMode,
+          'hover:border-primary/35':
+            state.editor.selectedElement.id !== props.element.id &&
+            !state.editor.liveMode,
+          '!border-transparent !ring-0': state.editor.liveMode,
         }
       )}
     >
       {state.editor.selectedElement.id === props.element.id &&
         !state.editor.liveMode && (
-          <Badge className="absolute -top-[23px] -left-[1px] rounded-none rounded-t-lg ">
+          <Badge className="builder-element-badge">
             {state.editor.selectedElement.name}
           </Badge>
         )}
@@ -93,7 +95,7 @@ const LinkComponent = (props: Props) => {
       )}
       {state.editor.selectedElement.id === props.element.id &&
         !state.editor.liveMode && (
-          <div className="absolute bg-primary px-2.5 py-1 text-xs font-bold  -top-[25px] -right-[1px] rounded-none rounded-t-lg !text-white">
+          <div className="builder-element-action">
             <Trash
               className="cursor-pointer"
               size={16}
