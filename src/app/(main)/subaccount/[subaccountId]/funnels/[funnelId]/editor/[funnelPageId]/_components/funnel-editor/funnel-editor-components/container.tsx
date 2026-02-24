@@ -184,23 +184,24 @@ const Container = ({ element }: Props) => {
   return (
     <div
       style={styles}
-      className={clsx('relative p-4 transition-all group', {
-        'max-w-full w-full': type === 'container' || type === '2Col',
-        'h-fit': type === 'container',
+      className={clsx('builder-element-base group p-4', {
+        'max-w-full w-full': type === 'container' || type === '2Col' || type === '__body',
+        'h-fit min-h-[120px]': type === 'container',
         'h-full': type === '__body',
-        'overflow-scroll ': type === '__body',
-        'flex flex-col md:!flex-row': type === '2Col',
-        '!border-blue-500':
+        'overflow-y-auto': type === '__body',
+        'flex flex-col gap-4 md:!flex-row': type === '2Col',
+        'bg-background/60': type !== '__body' && !state.editor.liveMode,
+        '!border-primary !ring-2 !ring-primary/20':
           state.editor.selectedElement.id === id &&
           !state.editor.liveMode &&
           state.editor.selectedElement.type !== '__body',
-        '!border-yellow-400 !border-4':
+        '!border-amber-400 !ring-2 !ring-amber-300/30':
           state.editor.selectedElement.id === id &&
           !state.editor.liveMode &&
           state.editor.selectedElement.type === '__body',
-        '!border-solid':
-          state.editor.selectedElement.id === id && !state.editor.liveMode,
-        'border-dashed border-[1px] border-slate-300': !state.editor.liveMode,
+        'hover:border-primary/35':
+          !state.editor.liveMode && state.editor.selectedElement.id !== id,
+        '!border-transparent !ring-0': state.editor.liveMode,
       })}
       onDrop={(e) => handleOnDrop(e, id)}
       onDragOver={handleDragOver}
@@ -210,11 +211,14 @@ const Container = ({ element }: Props) => {
     >
       <Badge
         className={clsx(
-          'absolute -top-[23px] -left-[1px] rounded-none rounded-t-lg hidden',
+          'builder-element-badge pointer-events-none transition-opacity',
           {
-            block:
+            'opacity-100':
               state.editor.selectedElement.id === element.id &&
               !state.editor.liveMode,
+            'opacity-0':
+              state.editor.selectedElement.id !== element.id ||
+              state.editor.liveMode,
           }
         )}
       >
@@ -232,8 +236,9 @@ const Container = ({ element }: Props) => {
       {state.editor.selectedElement.id === element.id &&
         !state.editor.liveMode &&
         state.editor.selectedElement.type !== '__body' && (
-          <div className="absolute bg-primary px-2.5 py-1 text-xs font-bold  -top-[25px] -right-[1px] rounded-none rounded-t-lg ">
+          <div className="builder-element-action">
             <Trash
+              className="cursor-pointer"
               size={16}
               onClick={handleDeleteElement}
             />

@@ -102,30 +102,34 @@ const ContactFormComponent = (props: Props) => {
       onDragStart={(e) => handleDragStart(e, 'contactForm')}
       onClick={handleOnClickBody}
       className={clsx(
-        'p-[2px] w-full m-[5px] relative text-[16px] transition-all flex items-center justify-center',
+        'builder-element-base my-2 flex w-full items-center justify-center px-3 py-3',
         {
-          '!border-blue-500':
-            state.editor.selectedElement.id === props.element.id,
-
-          '!border-solid': state.editor.selectedElement.id === props.element.id,
-          'border-dashed border-[1px] border-slate-300': !state.editor.liveMode,
+          '!border-primary !ring-2 !ring-primary/20':
+            state.editor.selectedElement.id === props.element.id &&
+            !state.editor.liveMode,
+          'hover:border-primary/35':
+            state.editor.selectedElement.id !== props.element.id &&
+            !state.editor.liveMode,
+          '!border-transparent !ring-0': state.editor.liveMode,
         }
       )}
     >
       {state.editor.selectedElement.id === props.element.id &&
         !state.editor.liveMode && (
-          <Badge className="absolute -top-[23px] -left-[1px] rounded-none rounded-t-lg ">
+          <Badge className="builder-element-badge">
             {state.editor.selectedElement.name}
           </Badge>
         )}
-      <ContactForm
-        subTitle="Contact Us"
-        title="Want a free quote? We can help you"
-        apiCall={onFormSubmit}
-      />
+      <div className="w-full rounded-2xl border border-border/70 bg-background/70 p-3 shadow-sm">
+        <ContactForm
+          subTitle="Contact Us"
+          title="Want a free quote? We can help you"
+          apiCall={onFormSubmit}
+        />
+      </div>
       {state.editor.selectedElement.id === props.element.id &&
         !state.editor.liveMode && (
-          <div className="absolute bg-primary px-2.5 py-1 text-xs font-bold  -top-[25px] -right-[1px] rounded-none rounded-t-lg !text-white">
+          <div className="builder-element-action">
             <Trash
               className="cursor-pointer"
               size={16}
