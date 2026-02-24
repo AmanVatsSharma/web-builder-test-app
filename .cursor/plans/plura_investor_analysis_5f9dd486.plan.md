@@ -34,7 +34,7 @@ Evidence in code:
 - **Tenancy + roles**: `Agency`, `SubAccount`, `Role`, `Permissions` in `[prisma/schema.prisma](prisma/schema.prisma)`
 - **Subdomain routing for hosted funnels**: host-based rewrite in `[src/middleware.ts](src/middleware.ts)`
 - **Funnel builder + hosted pages**: `[src/app/(main)/subaccount/[subaccountId]/funnels/**](src/app/(main)/subaccount/[subaccountId]/funnels)` and public render routes `[src/app/[domain]/**](src/app/[domain])`
-- **Platform subscription billing + Stripe Connect rebilling**: `[src/app/api/stripe/](src/app/api/stripe)`** + `[src/lib/stripe/](src/lib/stripe)**`
+- **Platform subscription billing + Stripe Connect rebilling**: `[src/app/api/stripe/](src/app/api/stripe)`** + `[src/lib/stripe/](src/lib/stripe)`**
 
 ## Feature set (what it gives you)
 
