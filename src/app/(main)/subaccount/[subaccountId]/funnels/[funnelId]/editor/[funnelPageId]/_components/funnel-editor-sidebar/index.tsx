@@ -1,10 +1,8 @@
 'use client'
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
@@ -30,31 +28,44 @@ const FunnelEditorSidebar = ({ subaccountId }: Props) => {
       modal={false}
     >
       <Tabs
-        className="w-full "
+        className="w-full"
         defaultValue="Settings"
       >
         <SheetContent
           showX={false}
+          showOverlay={false}
           side="right"
           className={clsx(
-            'mt-[97px] w-16 z-[80] shadow-none  p-0 focus:border-none transition-all overflow-hidden',
-            { hidden: state.editor.previewMode }
+            '!top-[102px] !bottom-6 !right-6 !h-auto !w-[72px] !rounded-2xl !border !border-border/70 !bg-card/95 !p-2 !shadow-editor-soft backdrop-blur-md transition-all duration-200',
+            {
+              'pointer-events-none translate-x-4 opacity-0':
+                state.editor.previewMode,
+            }
           )}
         >
           <TabList />
         </SheetContent>
         <SheetContent
           showX={false}
+          showOverlay={false}
           side="right"
           className={clsx(
-            'mt-[97px] w-80 z-[40] shadow-none p-0 mr-16 bg-background h-full transition-all overflow-hidden ',
-            { hidden: state.editor.previewMode }
+            '!top-[102px] !bottom-6 !right-[96px] !h-auto !w-[340px] !rounded-2xl !border !border-border/70 !bg-card/95 !p-0 !shadow-editor-card backdrop-blur-md transition-all duration-200',
+            {
+              'pointer-events-none translate-x-4 opacity-0':
+                state.editor.previewMode,
+            }
           )}
         >
-          <div className="grid gap-4 h-full pb-36 overflow-scroll">
-            <TabsContent value="Settings">
-              <SheetHeader className="text-left p-6">
-                <SheetTitle>Styles</SheetTitle>
+          <div className="h-full overflow-y-auto pb-24">
+            <TabsContent
+              value="Settings"
+              className="mt-0"
+            >
+              <SheetHeader className="border-b border-border/70 px-6 py-5 text-left">
+                <SheetTitle className="text-base font-semibold tracking-tight">
+                  Styles
+                </SheetTitle>
                 <SheetDescription>
                   Show your creativity! You can customize every component as you
                   like.
@@ -62,12 +73,20 @@ const FunnelEditorSidebar = ({ subaccountId }: Props) => {
               </SheetHeader>
               <SettingsTab />
             </TabsContent>
-            <TabsContent value="Media">
+            <TabsContent
+              value="Media"
+              className="mt-0"
+            >
               <MediaBucketTab subaccountId={subaccountId} />
             </TabsContent>
-            <TabsContent value="Components">
-              <SheetHeader className="text-left p-6 ">
-                <SheetTitle>Components</SheetTitle>
+            <TabsContent
+              value="Components"
+              className="mt-0"
+            >
+              <SheetHeader className="border-b border-border/70 px-6 py-5 text-left">
+                <SheetTitle className="text-base font-semibold tracking-tight">
+                  Components
+                </SheetTitle>
                 <SheetDescription>
                   You can drag and drop components on the canvas
                 </SheetDescription>
