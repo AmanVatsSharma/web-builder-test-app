@@ -5,8 +5,8 @@ import Unauthorized from '@/components/unauthorized'
 import {
   getNotificationAndUser,
   verifyAndAcceptInvitation,
+  getAuthUserDetails,
 } from '@/lib/queries'
-import { currentUser } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
@@ -17,7 +17,7 @@ type Props = {
 
 const layout = async ({ children, params }: Props) => {
   const agencyId = await verifyAndAcceptInvitation()
-  const user = await currentUser()
+  const user = await getAuthUserDetails()
 
   if (!user) {
     return redirect('/')
@@ -28,8 +28,8 @@ const layout = async ({ children, params }: Props) => {
   }
 
   if (
-    user.privateMetadata.role !== 'AGENCY_OWNER' &&
-    user.privateMetadata.role !== 'AGENCY_ADMIN'
+    user.role !== 'AGENCY_OWNER' &&
+    user.role !== 'AGENCY_ADMIN'
   )
     return <Unauthorized />
 
@@ -48,7 +48,7 @@ const layout = async ({ children, params }: Props) => {
       <div className="md:pl-[300px]">
         <InfoBar
           notifications={allNoti}
-          role={allNoti.User?.role}
+          role={user.role}
         />
         <div className="relative">
           <BlurPage>{children}</BlurPage>
