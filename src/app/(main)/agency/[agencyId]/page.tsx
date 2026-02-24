@@ -10,7 +10,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { db } from '@/lib/db'
-import { stripe } from '@/lib/stripe'
+import { getAgencyPayoutProvider, getGatewayDisplayName } from '@/lib/payments'
 import { AreaChart } from '@tremor/react'
 import {
   ClipboardIcon,
@@ -53,35 +53,36 @@ const Page = async ({
     },
   })
 
-  if (agencyDetails.connectAccountId) {
-    const response = await stripe.accounts.retrieve({
-      stripeAccount: agencyDetails.connectAccountId,
-    })
+  const payoutContext = await getAgencyPayoutProvider(agencyId)
+  const gatewayName = getGatewayDisplayName(payoutContext.gateway)
 
-    currency = response.default_currency?.toUpperCase() || 'USD'
-    const checkoutSessions = await stripe.checkout.sessions.list(
-      {
-        created: { gte: startDate, lte: endDate },
-        limit: 100,
-      },
-      { stripeAccount: agencyDetails.connectAccountId }
+  if (payoutContext.accountId && payoutContext.provider.isConfigured()) {
+    currency = await payoutContext.provider.getAccountCurrency(payoutContext.accountId)
+    const gatewaySessions = await payoutContext.provider.listAccountCheckoutSessions(
+      payoutContext.accountId,
+      startDate,
+      endDate
     )
-    sessions = checkoutSessions.data
-    totalClosedSessions = checkoutSessions.data
-      .filter((session) => session.status === 'complete')
-      .map((session) => ({
-        ...session,
-        created: new Date(session.created).toLocaleDateString(),
-        amount_total: session.amount_total ? session.amount_total / 100 : 0,
-      }))
 
-    totalPendingSessions = checkoutSessions.data
-      .filter((session) => session.status === 'open')
-      .map((session) => ({
-        ...session,
-        created: new Date(session.created).toLocaleDateString(),
-        amount_total: session.amount_total ? session.amount_total / 100 : 0,
-      }))
+    sessions = gatewaySessions.map((session) => ({
+      ...session,
+      created: new Date(session.createdAtUnix * 1000).toLocaleDateString(),
+      amount_total: session.amount,
+    }))
+
+    totalClosedSessions = sessions.filter(
+      (session) =>
+        session.status === 'complete' ||
+        session.status === 'captured' ||
+        session.status === 'paid'
+    )
+    totalPendingSessions = sessions.filter(
+      (session) =>
+        session.status === 'open' ||
+        session.status === 'created' ||
+        session.status === 'authorized'
+    )
+
     net = +totalClosedSessions
       .reduce((total, session) => total + (session.amount_total || 0), 0)
       .toFixed(2)
@@ -91,20 +92,20 @@ const Page = async ({
       .toFixed(2)
 
     closingRate = +(
-      (totalClosedSessions.length / checkoutSessions.data.length) *
+      (totalClosedSessions.length / (sessions.length || 1)) *
       100
     ).toFixed(2)
   }
 
   return (
     <div className="relative h-full">
-      {!agencyDetails.connectAccountId && (
+      {!payoutContext.accountId && (
         <div className="absolute -top-10 -left-10 right-0 bottom-0 z-30 flex items-center justify-center backdrop-blur-md bg-background/50">
           <Card>
             <CardHeader>
-              <CardTitle>Connect Your Stripe</CardTitle>
+              <CardTitle>Connect Your {gatewayName}</CardTitle>
               <CardDescription>
-                You need to connect your stripe account to see metrics
+                You need to connect your {gatewayName} account to see metrics.
               </CardDescription>
               <Link
                 href={`/agency/${agencyDetails.id}/launchpad`}
@@ -132,7 +133,7 @@ const Page = async ({
               </small>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              Total revenue generated as reflected in your stripe dashboard.
+              Total revenue generated as reflected in your {gatewayName} dashboard.
             </CardContent>
             <DollarSign className="absolute right-4 top-4 text-muted-foreground" />
           </Card>

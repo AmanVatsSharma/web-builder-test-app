@@ -1,14 +1,13 @@
 import AgencyDetails from '@/components/forms/agency-details'
 import { auth } from '@/auth'
 import { getAuthUserDetails, verifyAndAcceptInvitation } from '@/lib/queries'
-import { Plan } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
 const Page = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: Plan; state?: string; code?: string }>
+  searchParams: Promise<{ plan?: string; state?: string; code?: string }>
 }) => {
   const { plan, state, code } = await searchParams
   const agencyId = await verifyAndAcceptInvitation()
