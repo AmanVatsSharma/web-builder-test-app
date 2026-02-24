@@ -11,12 +11,18 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 
+const authSecrets = [
+  process.env.AUTH_SECRET,
+  process.env.NEXTAUTH_SECRET,
+  process.env.AUTH_SECRET_PREVIOUS,
+].filter((secret): secret is string => Boolean(secret));
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   trustHost: true,
-  secret: process.env.AUTH_SECRET,
+  secret: authSecrets.length > 1 ? authSecrets : authSecrets[0],
   session: {
-    strategy: "database",
+    strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {

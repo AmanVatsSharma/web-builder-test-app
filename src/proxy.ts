@@ -12,13 +12,15 @@ export default auth((req) => {
   }
 
   const host = req.headers.get("host") ?? "";
-  const domain = process.env.NEXT_PUBLIC_DOMAIN;
-  const customSubDomain = domain
-    ? host
-        .split(domain)
-        .filter(Boolean)[0]
-        ?.replace(/\.$/, "")
-    : undefined;
+  const hostName = host.split(":")[0]?.toLowerCase();
+  const configuredDomain = process.env.NEXT_PUBLIC_DOMAIN?.toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "");
+
+  const customSubDomain =
+    configuredDomain && hostName?.endsWith(`.${configuredDomain}`)
+      ? hostName.slice(0, -(configuredDomain.length + 1))
+      : undefined;
 
   if (customSubDomain) {
     return NextResponse.rewrite(
