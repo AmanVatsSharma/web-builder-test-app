@@ -5,10 +5,11 @@ import { db } from '@/lib/db'
 import React from 'react'
 
 type Props = {
-  params: { agencyId: string }
+  params: Promise<{ agencyId: string }>
 }
 
 const SettingsPage = async ({ params }: Props) => {
+  const { agencyId } = await params
   const session = await auth()
   if (!session?.user?.email) return null
 
@@ -21,7 +22,7 @@ const SettingsPage = async ({ params }: Props) => {
   if (!userDetails) return null
   const agencyDetails = await db.agency.findUnique({
     where: {
-      id: params.agencyId,
+      id: agencyId,
     },
     include: {
       SubAccount: true,
@@ -37,7 +38,7 @@ const SettingsPage = async ({ params }: Props) => {
       <AgencyDetails data={agencyDetails} />
       <UserDetails
         type="agency"
-        id={params.agencyId}
+        id={agencyId}
         subAccounts={subAccounts}
         userData={userDetails}
       />

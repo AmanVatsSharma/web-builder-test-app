@@ -15,15 +15,17 @@ import React from 'react'
 import { stripe } from '@/lib/stripe'
 
 type Props = {
-  params: {
+  params: Promise<{
     agencyId: string
-  }
-  searchParams: { code: string }
+  }>
+  searchParams: Promise<{ code?: string }>
 }
 
 const LaunchPadPage = async ({ params, searchParams }: Props) => {
+  const { agencyId } = await params
+  const { code } = await searchParams
   const agencyDetails = await db.agency.findUnique({
-    where: { id: params.agencyId },
+    where: { id: agencyId },
   })
 
   if (!agencyDetails) return
@@ -47,15 +49,15 @@ const LaunchPadPage = async ({ params, searchParams }: Props) => {
 
   let connectedStripeAccount = false
 
-  if (searchParams.code) {
+  if (code) {
     if (!agencyDetails.connectAccountId) {
       try {
         const response = await stripe.oauth.token({
           grant_type: 'authorization_code',
-          code: searchParams.code,
+          code,
         })
         await db.agency.update({
-          where: { id: params.agencyId },
+          where: { id: agencyId },
           data: { connectAccountId: response.stripe_user_id },
         })
         connectedStripeAccount = true
@@ -136,7 +138,7 @@ const LaunchPadPage = async ({ params, searchParams }: Props) => {
               ) : (
                 <Link
                   className="bg-primary py-2 px-4 rounded-md text-white"
-                  href={`/agency/${params.agencyId}/settings`}
+                  href={`/agency/${agencyId}/settings`}
                 >
                   Start
                 </Link>
