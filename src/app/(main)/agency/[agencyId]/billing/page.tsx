@@ -16,10 +16,11 @@ import clsx from 'clsx'
 import SubscriptionHelper from './_components/subscription-helper'
 
 type Props = {
-  params: { agencyId: string }
+  params: Promise<{ agencyId: string }>
 }
 
 const page = async ({ params }: Props) => {
+  const { agencyId } = await params
   //CHALLENGE : Create the add on  products
   const addOns = await stripe.products.list({
     ids: addOnProducts.map((product) => product.id),
@@ -28,7 +29,7 @@ const page = async ({ params }: Props) => {
 
   const agencySubscription = await db.agency.findUnique({
     where: {
-      id: params.agencyId,
+      id: agencyId,
     },
     select: {
       customerId: true,
