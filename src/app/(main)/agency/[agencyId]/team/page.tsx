@@ -1,8 +1,8 @@
+import { auth } from '@/auth'
 import { db } from '@/lib/db'
 import React from 'react'
 import DataTable from './data-table'
 import { Plus } from 'lucide-react'
-import { currentUser } from '@clerk/nextjs'
 import { columns } from './columns'
 import SendInvitation from '@/components/forms/send-invitation'
 
@@ -11,7 +11,7 @@ type Props = {
 }
 
 const TeamPage = async ({ params }: Props) => {
-  const authUser = await currentUser()
+  const session = await auth()
   const teamMembers = await db.user.findMany({
     where: {
       Agency: {
@@ -24,7 +24,7 @@ const TeamPage = async ({ params }: Props) => {
     },
   })
 
-  if (!authUser) return null
+  if (!session?.user?.email) return null
   const agencyDetails = await db.agency.findUnique({
     where: {
       id: params.agencyId,

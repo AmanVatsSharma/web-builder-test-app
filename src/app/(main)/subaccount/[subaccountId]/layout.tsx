@@ -6,8 +6,6 @@ import {
   getNotificationAndUser,
   verifyAndAcceptInvitation,
 } from '@/lib/queries'
-import { currentUser } from '@clerk/nextjs'
-import { Role } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
@@ -19,18 +17,17 @@ type Props = {
 const SubaccountLayout = async ({ children, params }: Props) => {
   const agencyId = await verifyAndAcceptInvitation()
   if (!agencyId) return <Unauthorized />
-  const user = await currentUser()
+  const user = await getAuthUserDetails()
   if (!user) {
     return redirect('/')
   }
 
   let notifications: any = []
 
-  if (!user.privateMetadata.role) {
+  if (!user.role) {
     return <Unauthorized />
   } else {
-    const allPermissions = await getAuthUserDetails()
-    const hasPermission = allPermissions?.Permissions.find(
+    const hasPermission = user.Permissions.find(
       (permissions) =>
         permissions.access && permissions.subAccountId === params.subaccountId
     )
@@ -41,8 +38,8 @@ const SubaccountLayout = async ({ children, params }: Props) => {
     const allNotifications = await getNotificationAndUser(agencyId)
 
     if (
-      user.privateMetadata.role === 'AGENCY_ADMIN' ||
-      user.privateMetadata.role === 'AGENCY_OWNER'
+      user.role === 'AGENCY_ADMIN' ||
+      user.role === 'AGENCY_OWNER'
     ) {
       notifications = allNotifications
     } else {
@@ -63,7 +60,7 @@ const SubaccountLayout = async ({ children, params }: Props) => {
       <div className="md:pl-[300px]">
         <InfoBar
           notifications={notifications}
-          role={user.privateMetadata.role as Role}
+          role={user.role}
           subAccountId={params.subaccountId as string}
         />
         <div className="relative">{children}</div>
