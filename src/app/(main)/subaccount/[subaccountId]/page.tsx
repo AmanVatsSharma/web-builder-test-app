@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { db } from '@/lib/db'
-import { stripe } from '@/lib/stripe'
+import { getGatewayDisplayName, getSubAccountPaymentProvider } from '@/lib/payments'
 import { AreaChart, BadgeDelta } from '@tremor/react'
 import { ClipboardIcon, Contact2, DollarSign, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
@@ -52,41 +52,38 @@ const SubaccountPageId = async ({ params }: Props) => {
   const endDate = new Date(`${currentYear}-12-31T23:59:59Z`).getTime() / 1000
 
   if (!subaccountDetails) return
+  const paymentContext = await getSubAccountPaymentProvider(subaccountId)
+  const gatewayName = getGatewayDisplayName(paymentContext.gateway)
 
-  if (subaccountDetails.connectAccountId) {
-    const response = await stripe.accounts.retrieve({
-      stripeAccount: subaccountDetails.connectAccountId,
-    })
-    currency = response.default_currency?.toUpperCase() || 'USD'
-    const checkoutSessions = await stripe.checkout.sessions.list(
-      { created: { gte: startDate, lte: endDate }, limit: 100 },
-      {
-        stripeAccount: subaccountDetails.connectAccountId,
-      }
+  if (paymentContext.accountId && paymentContext.provider.isConfigured()) {
+    currency = await paymentContext.provider.getAccountCurrency(
+      paymentContext.accountId
     )
-    sessions = checkoutSessions.data.map((session) => ({
+    const checkoutSessions = await paymentContext.provider.listAccountCheckoutSessions(
+      paymentContext.accountId,
+      startDate,
+      endDate
+    )
+    sessions = checkoutSessions.map((session) => ({
       ...session,
-      created: new Date(session.created).toLocaleDateString(),
-      amount_total: session.amount_total ? session.amount_total / 100 : 0,
+      created: new Date(session.createdAtUnix * 1000).toLocaleDateString(),
+      amount_total: session.amount || 0,
     }))
 
-    totalClosedSessions = checkoutSessions.data
-      .filter((session) => session.status === 'complete')
-      .map((session) => ({
-        ...session,
-        created: new Date(session.created).toLocaleDateString(),
-        amount_total: session.amount_total ? session.amount_total / 100 : 0,
-      }))
+    totalClosedSessions = sessions.filter(
+      (session) =>
+        session.status === 'complete' ||
+        session.status === 'captured' ||
+        session.status === 'paid'
+    )
 
-    totalPendingSessions = checkoutSessions.data
-      .filter(
-        (session) => session.status === 'open' || session.status === 'expired'
-      )
-      .map((session) => ({
-        ...session,
-        created: new Date(session.created).toLocaleDateString(),
-        amount_total: session.amount_total ? session.amount_total / 100 : 0,
-      }))
+    totalPendingSessions = sessions.filter(
+      (session) =>
+        session.status === 'open' ||
+        session.status === 'expired' ||
+        session.status === 'created' ||
+        session.status === 'authorized'
+    )
 
     net = +totalClosedSessions
       .reduce((total, session) => total + (session.amount_total || 0), 0)
@@ -97,7 +94,7 @@ const SubaccountPageId = async ({ params }: Props) => {
       .toFixed(2)
 
     closingRate = +(
-      (totalClosedSessions.length / checkoutSessions.data.length) *
+      (totalClosedSessions.length / (sessions.length || 1)) *
       100
     ).toFixed(2)
   }
@@ -122,13 +119,13 @@ const SubaccountPageId = async ({ params }: Props) => {
   return (
     <BlurPage>
       <div className="relative h-full">
-        {!subaccountDetails.connectAccountId && (
+        {!paymentContext.accountId && (
           <div className="absolute -top-10 -left-10 right-0 bottom-0 z-30 flex items-center justify-center backdrop-blur-md bg-background/50">
             <Card>
               <CardHeader>
-                <CardTitle>Connect Your Stripe</CardTitle>
+                <CardTitle>Connect Your {gatewayName}</CardTitle>
                 <CardDescription>
-                  You need to connect your stripe account to see metrics
+                  You need to connect your {gatewayName} account to see metrics
                 </CardDescription>
                 <Link
                   href={`/subaccount/${subaccountDetails.id}/launchpad`}
@@ -154,7 +151,7 @@ const SubaccountPageId = async ({ params }: Props) => {
                 </small>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
-                Total revenue generated as reflected in your stripe dashboard.
+                Total revenue generated as reflected in your {gatewayName} dashboard.
               </CardContent>
               <DollarSign className="absolute right-4 top-4 text-muted-foreground" />
             </Card>
@@ -266,7 +263,9 @@ const SubaccountPageId = async ({ params }: Props) => {
                       ? totalClosedSessions.map((session) => (
                           <TableRow key={session.id}>
                             <TableCell>
-                              {session.customer_details?.email || '-'}
+                              {(session as any).customer_details?.email ||
+                                session.description ||
+                                '-'}
                             </TableCell>
                             <TableCell>
                               <Badge className="bg-emerald-500 dark:text-black">

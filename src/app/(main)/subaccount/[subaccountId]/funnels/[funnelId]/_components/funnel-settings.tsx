@@ -1,8 +1,9 @@
 import React from 'react'
 
-import { Funnel, SubAccount } from '@prisma/client'
+import { Funnel } from '@prisma/client'
 import { db } from '@/lib/db'
-import { getConnectAccountProducts } from '@/lib/stripe/stripe-actions'
+import { getSubaccountProductCatalog } from '@/lib/payments/actions'
+import { getGatewayDisplayName } from '@/lib/payments'
 
 
 import FunnelForm from '@/components/forms/funnel-form'
@@ -24,8 +25,6 @@ const FunnelSettings: React.FC<FunnelSettingsProps> = async ({
   subaccountId,
   defaultData,
 }) => {
-  //CHALLENGE: go connect your stripe to sell products
-
   const subaccountDetails = await db.subAccount.findUnique({
     where: {
       id: subaccountId,
@@ -33,10 +32,11 @@ const FunnelSettings: React.FC<FunnelSettingsProps> = async ({
   })
 
   if (!subaccountDetails) return
-  if (!subaccountDetails.connectAccountId) return
-  const products = await getConnectAccountProducts(
-    subaccountDetails.connectAccountId
-  )
+
+  const productCatalog = await getSubaccountProductCatalog(subaccountId)
+  const products = productCatalog.products
+  const canLoadProducts = products.length > 0
+  const gatewayName = getGatewayDisplayName(productCatalog.gateway)
 
   return (
     <div className="flex gap-4 flex-col xl:!flex-row">
@@ -47,16 +47,20 @@ const FunnelSettings: React.FC<FunnelSettingsProps> = async ({
             Select the products and services you wish to sell on this funnel.
             You can sell one time and recurring products too.
           </CardDescription>
+          <CardDescription>
+            Product source: {gatewayName}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <>
-            {subaccountDetails.connectAccountId ? (
+            {canLoadProducts ? (
               <FunnelProductsTable
                 defaultData={defaultData}
+                gateway={productCatalog.gateway}
                 products={products}
               />
             ) : (
-              'Connect your stripe account to sell products.'
+              `No products found for ${gatewayName}. Add products in your payment provider and reconnect from Launchpad.`
             )}
           </>
         </CardContent>

@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import Stripe from 'stripe'
 import Image from 'next/image'
 import {
   saveActivityLogsNotification,
@@ -18,13 +17,17 @@ import { Funnel } from '@prisma/client'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { PaymentGatewayCode } from '@/lib/payments'
+import { GatewayProductOption } from '@/lib/types'
 
 interface FunnelProductsTableProps {
   defaultData: Funnel
-  products: Stripe.Product[]
+  gateway: PaymentGatewayCode
+  products: GatewayProductOption[]
 }
 
 const FunnelProductsTable: React.FC<FunnelProductsTableProps> = ({
+  gateway,
   products,
   defaultData,
 }) => {
@@ -36,8 +39,12 @@ const FunnelProductsTable: React.FC<FunnelProductsTableProps> = ({
 
   const handleSaveProducts = async () => {
     setIsLoading(true)
+    const payload = liveProducts.map((product) => ({
+      ...product,
+      gateway,
+    }))
     const response = await updateFunnelProducts(
-      JSON.stringify(liveProducts),
+      JSON.stringify(payload),
       defaultData.id
     )
     await saveActivityLogsNotification({
@@ -49,28 +56,21 @@ const FunnelProductsTable: React.FC<FunnelProductsTableProps> = ({
     router.refresh()
   }
 
-  const handleAddProduct = async (product: Stripe.Product) => {
+  const handleAddProduct = async (product: GatewayProductOption) => {
     const productIdExists = liveProducts.find(
-      //@ts-ignore
-      (prod) => prod.productId === product.default_price.id
+      (prod) => prod.productId === product.priceId
     )
     productIdExists
       ? setLiveProducts(
           liveProducts.filter(
-            (prod) =>
-              prod.productId !==
-              //@ts-ignore
-              product.default_price?.id
+            (prod) => prod.productId !== product.priceId
           )
         )
-      : //@ts-ignore
-        setLiveProducts([
+      : setLiveProducts([
           ...liveProducts,
           {
-            //@ts-ignore
-            productId: product.default_price.id as string,
-            //@ts-ignore
-            recurring: !!product.default_price.recurring,
+            productId: product.priceId,
+            recurring: product.recurring,
           },
         ])
   }
@@ -93,8 +93,7 @@ const FunnelProductsTable: React.FC<FunnelProductsTableProps> = ({
                 <Input
                   defaultChecked={
                     !!liveProducts.find(
-                      //@ts-ignore
-                      (prod) => prod.productId === product.default_price.id
+                      (prod) => prod.productId === product.priceId
                     )
                   }
                   onChange={() => handleAddProduct(product)}
@@ -107,22 +106,13 @@ const FunnelProductsTable: React.FC<FunnelProductsTableProps> = ({
                   alt="product Image"
                   height={60}
                   width={60}
-                  src={product.images[0]}
+                  src={product.image}
                 />
               </TableCell>
               <TableCell>{product.name}</TableCell>
-              <TableCell>
-                {
-                  //@ts-ignore
-                  product.default_price?.recurring ? 'Recurring' : 'One Time'
-                }
-              </TableCell>
+              <TableCell>{product.recurring ? 'Recurring' : 'One Time'}</TableCell>
               <TableCell className="text-right">
-                $
-                {
-                  //@ts-ignore
-                  product.default_price?.unit_amount / 100
-                }
+                {product.currency} {product.unitAmount.toFixed(2)}
               </TableCell>
             </TableRow>
           ))}
