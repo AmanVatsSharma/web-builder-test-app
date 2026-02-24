@@ -25,9 +25,9 @@ import React from 'react'
 const Page = async ({
   params,
 }: {
-  params: { agencyId: string }
-  searchParams: { code: string }
+  params: Promise<{ agencyId: string }>
 }) => {
+  const { agencyId } = await params
   let currency = 'USD'
   let sessions
   let totalClosedSessions
@@ -41,7 +41,7 @@ const Page = async ({
 
   const agencyDetails = await db.agency.findUnique({
     where: {
-      id: params.agencyId,
+      id: agencyId,
     },
   })
 
@@ -49,7 +49,7 @@ const Page = async ({
 
   const subaccounts = await db.subAccount.findMany({
     where: {
-      agencyId: params.agencyId,
+      agencyId,
     },
   })
 

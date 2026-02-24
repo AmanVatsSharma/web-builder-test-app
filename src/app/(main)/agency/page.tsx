@@ -8,8 +8,9 @@ import React from 'react'
 const Page = async ({
   searchParams,
 }: {
-  searchParams: { plan: Plan; state: string; code: string }
+  searchParams: Promise<{ plan?: Plan; state?: string; code?: string }>
 }) => {
+  const { plan, state, code } = await searchParams
   const agencyId = await verifyAndAcceptInvitation()
 
   //get the users details
@@ -18,15 +19,15 @@ const Page = async ({
     if (user?.role === 'SUBACCOUNT_GUEST' || user?.role === 'SUBACCOUNT_USER') {
       return redirect('/subaccount')
     } else if (user?.role === 'AGENCY_OWNER' || user?.role === 'AGENCY_ADMIN') {
-      if (searchParams.plan) {
-        return redirect(`/agency/${agencyId}/billing?plan=${searchParams.plan}`)
+      if (plan) {
+        return redirect(`/agency/${agencyId}/billing?plan=${plan}`)
       }
-      if (searchParams.state) {
-        const statePath = searchParams.state.split('___')[0]
-        const stateAgencyId = searchParams.state.split('___')[1]
+      if (state) {
+        const statePath = state.split('___')[0]
+        const stateAgencyId = state.split('___')[1]
         if (!stateAgencyId) return <div>Not authorized</div>
         return redirect(
-          `/agency/${stateAgencyId}/${statePath}?code=${searchParams.code}`
+          `/agency/${stateAgencyId}/${statePath}?code=${code}`
         )
       } else return redirect(`/agency/${agencyId}`)
     } else {
