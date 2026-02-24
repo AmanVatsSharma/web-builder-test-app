@@ -6,10 +6,11 @@ import { db } from '@/lib/db'
 import React from 'react'
 
 type Props = {
-  params: { subaccountId: string }
+  params: Promise<{ subaccountId: string }>
 }
 
 const SubaccountSettingPage = async ({ params }: Props) => {
+  const { subaccountId } = await params
   const session = await auth()
   if (!session?.user?.email) return
   const userDetails = await db.user.findUnique({
@@ -20,7 +21,7 @@ const SubaccountSettingPage = async ({ params }: Props) => {
   if (!userDetails) return
 
   const subAccount = await db.subAccount.findUnique({
-    where: { id: params.subaccountId },
+    where: { id: subaccountId },
   })
   if (!subAccount) return
 
@@ -43,7 +44,7 @@ const SubaccountSettingPage = async ({ params }: Props) => {
         />
         <UserDetails
           type="subaccount"
-          id={params.subaccountId}
+          id={subaccountId}
           subAccounts={subAccounts}
           userData={userDetails}
         />

@@ -14,20 +14,21 @@ import PipelineSettings from '../_components/pipeline-settings'
 import PipelineView from '../_components/pipeline-view'
 
 type Props = {
-  params: { subaccountId: string; pipelineId: string }
+  params: Promise<{ subaccountId: string; pipelineId: string }>
 }
 
 const PipelinePage = async ({ params }: Props) => {
-  const pipelineDetails = await getPipelineDetails(params.pipelineId)
+  const { subaccountId, pipelineId } = await params
+  const pipelineDetails = await getPipelineDetails(pipelineId)
   if (!pipelineDetails)
-    return redirect(`/subaccount/${params.subaccountId}/pipelines`)
+    return redirect(`/subaccount/${subaccountId}/pipelines`)
 
   const pipelines = await db.pipeline.findMany({
-    where: { subAccountId: params.subaccountId },
+    where: { subAccountId: subaccountId },
   })
 
   const lanes = (await getLanesWithTicketAndTags(
-    params.pipelineId
+    pipelineId
   )) as LaneDetail[]
 
   return (
@@ -37,8 +38,8 @@ const PipelinePage = async ({ params }: Props) => {
     >
       <TabsList className="bg-transparent border-b-2 h-16 w-full justify-between mb-4">
         <PipelineInfoBar
-          pipelineId={params.pipelineId}
-          subAccountId={params.subaccountId}
+          pipelineId={pipelineId}
+          subAccountId={subaccountId}
           pipelines={pipelines}
         />
         <div>
@@ -50,17 +51,17 @@ const PipelinePage = async ({ params }: Props) => {
         <PipelineView
           lanes={lanes}
           pipelineDetails={pipelineDetails}
-          pipelineId={params.pipelineId}
-          subaccountId={params.subaccountId}
+          pipelineId={pipelineId}
+          subaccountId={subaccountId}
           updateLanesOrder={updateLanesOrder}
           updateTicketsOrder={updateTicketsOrder}
         />
       </TabsContent>
       <TabsContent value="settings">
         <PipelineSettings
-          pipelineId={params.pipelineId}
+          pipelineId={pipelineId}
           pipelines={pipelines}
-          subaccountId={params.subaccountId}
+          subaccountId={subaccountId}
         />
       </TabsContent>
     </Tabs>
