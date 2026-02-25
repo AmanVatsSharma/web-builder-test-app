@@ -67,48 +67,50 @@ const ComponentsTab = (props: Props) => {
     },
   ]
 
+  const renderGroup = (group: 'layout' | 'elements') => (
+    <div className="grid grid-cols-2 gap-3">
+      {elements
+        .filter((element) => element.group === group)
+        .map((element) => (
+          <div
+            key={element.id}
+            className="group flex flex-col items-center rounded-xl border border-border/70 bg-background/70 px-2 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background hover:shadow-sm"
+          >
+            {element.Component}
+            <span className="mt-2 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+              {element.label}
+            </span>
+          </div>
+        ))}
+    </div>
+  )
+
   return (
     <Accordion
       type="multiple"
-      className="w-full"
+      className="w-full px-3 pb-14"
       defaultValue={['Layout', 'Elements']}
     >
       <AccordionItem
         value="Layout"
-        className="px-6 py-0 border-y-[1px]"
+        className="mb-3 rounded-xl border border-border/70 bg-background/70 px-4"
       >
-        <AccordionTrigger className="!no-underline">Layout</AccordionTrigger>
-        <AccordionContent className="flex flex-wrap gap-2 ">
-          {elements
-            .filter((element) => element.group === 'layout')
-            .map((element) => (
-              <div
-                key={element.id}
-                className="flex-col items-center justify-center flex"
-              >
-                {element.Component}
-                <span className="text-muted-foreground">{element.label}</span>
-              </div>
-            ))}
+        <AccordionTrigger className="py-4 text-sm font-semibold tracking-tight !no-underline">
+          Layout
+        </AccordionTrigger>
+        <AccordionContent className="pb-4 pt-1">
+          {renderGroup('layout')}
         </AccordionContent>
       </AccordionItem>
       <AccordionItem
         value="Elements"
-        className="px-6 py-0 "
+        className="mb-3 rounded-xl border border-border/70 bg-background/70 px-4"
       >
-        <AccordionTrigger className="!no-underline">Elements</AccordionTrigger>
-        <AccordionContent className="flex flex-wrap gap-2 ">
-          {elements
-            .filter((element) => element.group === 'elements')
-            .map((element) => (
-              <div
-                key={element.id}
-                className="flex-col items-center justify-center flex"
-              >
-                {element.Component}
-                <span className="text-muted-foreground">{element.label}</span>
-              </div>
-            ))}
+        <AccordionTrigger className="py-4 text-sm font-semibold tracking-tight !no-underline">
+          Elements
+        </AccordionTrigger>
+        <AccordionContent className="pb-4 pt-1">
+          {renderGroup('elements')}
         </AccordionContent>
       </AccordionItem>
     </Accordion>
