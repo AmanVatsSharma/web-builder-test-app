@@ -1,4 +1,3 @@
-
 import { EditorBtns } from '@/lib/constants'
 import React from 'react'
 
@@ -13,10 +12,10 @@ const TwoColumnsPlaceholder = (props: Props) => {
     <div
       draggable
       onDragStart={(e) => handleDragStart(e, '2Col')}
-      className=" h-14 w-14 bg-muted/70 rounded-lg p-2 flex flex-row gap-[4px]"
+      className="flex h-12 w-12 flex-row gap-1 rounded-lg border border-border/70 bg-card/80 p-2 shadow-sm transition-colors group-hover:border-primary/40"
     >
-      <div className="border-dashed border-[1px] h-full rounded-sm bg-muted border-muted-foreground/50 w-full"></div>
-      <div className="border-dashed border-[1px] h-full rounded-sm bg-muted border-muted-foreground/50 w-full"></div>
+      <div className="h-full w-full rounded-sm border border-dashed border-muted-foreground/40 bg-muted/60" />
+      <div className="h-full w-full rounded-sm border border-dashed border-muted-foreground/40 bg-muted/60" />
     </div>
   )
 }
