@@ -1,5 +1,4 @@
 import { EditorBtns } from '@/lib/constants'
-import { Youtube } from 'lucide-react'
 import Image from 'next/image'
 import React from 'react'
 
@@ -14,12 +13,12 @@ const CheckoutPlaceholder = (props: Props) => {
     <div
       draggable
       onDragStart={(e) => handleDragStart(e, 'paymentForm')}
-      className=" h-14 w-14 bg-muted rounded-lg flex items-center justify-center"
+      className="flex h-12 w-12 items-center justify-center rounded-lg border border-border/70 bg-card/80 shadow-sm transition-colors group-hover:border-primary/40"
     >
       <Image
         src="/stripelogo.png"
-        height={40}
-        width={40}
+        height={24}
+        width={24}
         alt="stripe logo"
         className="object-cover"
       />

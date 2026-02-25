@@ -86,15 +86,17 @@ const SettingsTab = (props: Props) => {
   return (
     <Accordion
       type="multiple"
-      className="w-full"
+      className="w-full px-3 pb-20"
       defaultValue={['Typography', 'Dimensions', 'Decorations', 'Flexbox']}
     >
       <AccordionItem
         value="Custom"
-        className="px-6 py-0  "
+        className="mb-3 rounded-xl border border-border/70 bg-background/70 px-4"
       >
-        <AccordionTrigger className="!no-underline">Custom</AccordionTrigger>
-        <AccordionContent>
+        <AccordionTrigger className="py-4 text-sm font-semibold tracking-tight !no-underline">
+          Custom
+        </AccordionTrigger>
+        <AccordionContent className="pb-4 pt-1">
           {state.editor.selectedElement.type === 'link' &&
             !Array.isArray(state.editor.selectedElement.content) && (
               <div className="flex flex-col gap-2">
@@ -111,12 +113,12 @@ const SettingsTab = (props: Props) => {
       </AccordionItem>
       <AccordionItem
         value="Typography"
-        className="px-6 py-0  border-y-[1px]"
+        className="mb-3 rounded-xl border border-border/70 bg-background/70 px-4"
       >
-        <AccordionTrigger className="!no-underline">
+        <AccordionTrigger className="py-4 text-sm font-semibold tracking-tight !no-underline">
           Typography
         </AccordionTrigger>
-        <AccordionContent className="flex flex-col gap-2 ">
+        <AccordionContent className="flex flex-col gap-3 pb-4 pt-1">
           <div className="flex flex-col gap-2 ">
             <p className="text-muted-foreground">Text Align</p>
             <Tabs
@@ -130,7 +132,7 @@ const SettingsTab = (props: Props) => {
               }
               value={state.editor.selectedElement.styles.textAlign}
             >
-              <TabsList className="flex items-center flex-row justify-between border-[1px] rounded-md bg-transparent h-fit gap-4">
+              <TabsList className="grid h-10 grid-cols-4 gap-1 rounded-lg border border-border/70 bg-muted/40 p-1">
                 <TabsTrigger
                   value="left"
                   className="w-10 h-10 p-0 data-[state=active]:bg-muted"
@@ -214,12 +216,12 @@ const SettingsTab = (props: Props) => {
       </AccordionItem>
       <AccordionItem
         value="Dimensions"
-        className=" px-6 py-0 "
+        className="mb-3 rounded-xl border border-border/70 bg-background/70 px-4"
       >
-        <AccordionTrigger className="!no-underline">
+        <AccordionTrigger className="py-4 text-sm font-semibold tracking-tight !no-underline">
           Dimensions
         </AccordionTrigger>
-        <AccordionContent>
+        <AccordionContent className="pb-4 pt-1">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <div className="flex gap-4 flex-col">
@@ -338,12 +340,12 @@ const SettingsTab = (props: Props) => {
       </AccordionItem>
       <AccordionItem
         value="Decorations"
-        className="px-6 py-0 "
+        className="mb-3 rounded-xl border border-border/70 bg-background/70 px-4"
       >
-        <AccordionTrigger className="!no-underline">
+        <AccordionTrigger className="py-4 text-sm font-semibold tracking-tight !no-underline">
           Decorations
         </AccordionTrigger>
-        <AccordionContent className="flex flex-col gap-4">
+        <AccordionContent className="flex flex-col gap-4 pb-4 pt-1">
           <div>
             <Label className="text-muted-foreground">Opacity</Label>
             <div className="flex items-center justify-end">
@@ -470,7 +472,7 @@ const SettingsTab = (props: Props) => {
               }
               value={state.editor.selectedElement.styles.backgroundSize?.toString()}
             >
-              <TabsList className="flex items-center flex-row justify-between border-[1px] rounded-md bg-transparent h-fit gap-4">
+              <TabsList className="grid h-10 grid-cols-3 gap-1 rounded-lg border border-border/70 bg-muted/40 p-1">
                 <TabsTrigger
                   value="cover"
                   className="w-10 h-10 p-0 data-[state=active]:bg-muted"
@@ -496,10 +498,12 @@ const SettingsTab = (props: Props) => {
       </AccordionItem>
       <AccordionItem
         value="Flexbox"
-        className="px-6 py-0  "
+        className="mb-3 rounded-xl border border-border/70 bg-background/70 px-4"
       >
-        <AccordionTrigger className="!no-underline">Flexbox</AccordionTrigger>
-        <AccordionContent>
+        <AccordionTrigger className="py-4 text-sm font-semibold tracking-tight !no-underline">
+          Flexbox
+        </AccordionTrigger>
+        <AccordionContent className="pb-4 pt-1">
           <Label className="text-muted-foreground">Justify Content</Label>
           <Tabs
             onValueChange={(e) =>
@@ -512,7 +516,7 @@ const SettingsTab = (props: Props) => {
             }
             value={state.editor.selectedElement.styles.justifyContent}
           >
-            <TabsList className="flex items-center flex-row justify-between border-[1px] rounded-md bg-transparent h-fit gap-4">
+            <TabsList className="grid h-10 grid-cols-5 gap-1 rounded-lg border border-border/70 bg-muted/40 p-1">
               <TabsTrigger
                 value="space-between"
                 className="w-10 h-10 p-0 data-[state=active]:bg-muted"
@@ -557,7 +561,7 @@ const SettingsTab = (props: Props) => {
             }
             value={state.editor.selectedElement.styles.alignItems}
           >
-            <TabsList className="flex items-center flex-row justify-between border-[1px] rounded-md bg-transparent h-fit gap-4">
+            <TabsList className="grid h-10 grid-cols-2 gap-1 rounded-lg border border-border/70 bg-muted/40 p-1">
               <TabsTrigger
                 value="center"
                 className="w-10 h-10 p-0 data-[state=active]:bg-muted"
