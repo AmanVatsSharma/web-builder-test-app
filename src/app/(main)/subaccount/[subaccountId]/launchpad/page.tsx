@@ -8,8 +8,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { db } from '@/lib/db'
-import { stripe } from '@/lib/stripe'
-import { getStripeOAuthLink } from '@/lib/utils'
+import {
+  getGatewayDisplayName,
+  getSubAccountPaymentProvider,
+  upsertSubAccountConnectAccount,
+} from '@/lib/payments'
 import { CheckCircleIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -35,6 +38,8 @@ const LaunchPad = async ({ params, searchParams }: Props) => {
   if (!subaccountDetails) {
     return
   }
+  const paymentContext = await getSubAccountPaymentProvider(subaccountId)
+  const gatewayName = getGatewayDisplayName(paymentContext.gateway)
 
   const allDetailsExist =
     subaccountDetails.address &&
@@ -46,27 +51,25 @@ const LaunchPad = async ({ params, searchParams }: Props) => {
     subaccountDetails.name &&
     subaccountDetails.state
 
-  const stripeOAuthLink = getStripeOAuthLink(
+  const paymentOAuthLink = paymentContext.provider.getConnectOAuthLink(
     'subaccount',
     `launchpad___${subaccountDetails.id}`
   )
 
-  let connectedStripeAccount = false
+  let connectedPaymentAccount = false
 
   if (code) {
-    if (!subaccountDetails.connectAccountId) {
+    if (!paymentContext.accountId) {
       try {
-        const response = await stripe.oauth.token({
-          grant_type: 'authorization_code',
-          code,
-        })
-        await db.subAccount.update({
-          where: { id: subaccountId },
-          data: { connectAccountId: response.stripe_user_id },
-        })
-        connectedStripeAccount = true
+        const response = await paymentContext.provider.exchangeConnectCode(code)
+        await upsertSubAccountConnectAccount(
+          subaccountId,
+          response.accountId,
+          paymentContext.gateway
+        )
+        connectedPaymentAccount = true
       } catch (error) {
-        console.log('🔴 Could not connect stripe account', error)
+        console.log(`🔴 Could not connect ${gatewayName} account`, error)
       }
     }
   }
@@ -106,23 +109,33 @@ const LaunchPad = async ({ params, searchParams }: Props) => {
                     className="rounded-md object-contain "
                   />
                   <p>
-                    Connect your stripe account to accept payments. Stripe is
+                    Connect your {gatewayName} account to accept payments. {gatewayName} is
                     used to run payouts.
                   </p>
                 </div>
-                {subaccountDetails.connectAccountId ||
-                connectedStripeAccount ? (
+                {paymentContext.accountId || connectedPaymentAccount ? (
                   <CheckCircleIcon
                     size={50}
                     className=" text-primary p-2 flex-shrink-0"
                   />
                 ) : (
-                  <Link
-                    className="bg-primary py-2 px-4 rounded-md text-white"
-                    href={stripeOAuthLink}
-                  >
-                    Start
-                  </Link>
+                  <>
+                    {paymentOAuthLink ? (
+                      <Link
+                        className="bg-primary py-2 px-4 rounded-md text-white"
+                        href={paymentOAuthLink}
+                      >
+                        Start
+                      </Link>
+                    ) : (
+                      <Link
+                        className="bg-primary py-2 px-4 rounded-md text-white"
+                        href={`/subaccount/${subaccountDetails.id}/settings`}
+                      >
+                        Set in Settings
+                      </Link>
+                    )}
+                  </>
                 )}
               </div>
               <div className="flex justify-between items-center w-full h-20 border p-4 rounded-lg">
