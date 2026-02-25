@@ -1,5 +1,4 @@
-import { db } from '@/lib/db'
-import { stripe } from '@/lib/stripe'
+import { createGatewayCheckoutSession } from '@/lib/payments/actions'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
@@ -18,62 +17,20 @@ export async function POST(req: Request) {
     return new NextResponse('Stripe Account Id or price id is missing', {
       status: 400,
     })
-  if (
-    !process.env.NEXT_PUBLIC_PLATFORM_SUBSCRIPTION_PERCENT ||
-    !process.env.NEXT_PUBLIC_PLATFORM_ONETIME_FEE ||
-    !process.env.NEXT_PUBLIC_PLATFORM_AGENY_PERCENT
-  ) {
-    console.log('VALUES DONT EXITS')
-    return NextResponse.json({ error: 'Fees do not exist' })
-  }
-
-  // Not needed unless we want to send payments to this account.
-  //CHALLENGE Transfer money to a connected
-  // const agencyIdConnectedAccountId = await db.subAccount.findUnique({
-  //   where: { id: subaccountId },
-  //   include: { Agency: true },
-  // })
-
-  const subscriptionPriceExists = prices.find((price) => price.recurring)
-  // if (!agencyIdConnectedAccountId?.Agency.connectAccountId) {
-  //   console.log('Agency is not connected')
-  //   return NextResponse.json({ error: 'Agency account is not connected' })
-  // }
 
   try {
-    const session = await stripe.checkout.sessions.create(
+    const session = await createGatewayCheckoutSession(
       {
-        line_items: prices.map((price) => ({
-          price: price.productId,
-          quantity: 1,
-        })),
-
-        ...(subscriptionPriceExists && {
-          subscription_data: {
-            metadata: { connectAccountSubscriptions: 'true' },
-            application_fee_percent:
-              +process.env.NEXT_PUBLIC_PLATFORM_SUBSCRIPTION_PERCENT,
-          },
-        }),
-
-        ...(!subscriptionPriceExists && {
-          payment_intent_data: {
-            metadata: { connectAccountPayments: 'true' },
-            application_fee_amount:
-              +process.env.NEXT_PUBLIC_PLATFORM_ONETIME_FEE * 100,
-          },
-        }),
-
-        mode: subscriptionPriceExists ? 'subscription' : 'payment',
-        ui_mode: 'embedded',
-        redirect_on_completion: 'never',
+        subAccountAccountId: subAccountConnectAccId,
+        prices,
+        subaccountId,
       },
-      { stripeAccount: subAccountConnectAccId }
+      'STRIPE'
     )
 
     return NextResponse.json(
       {
-        clientSecret: session.client_secret,
+        clientSecret: session.mode === 'embedded' ? session.clientSecret : '',
       },
       {
         headers: {
@@ -85,8 +42,9 @@ export async function POST(req: Request) {
     )
   } catch (error) {
     console.log('🔴 Error', error)
-    //@ts-ignore
-    return NextResponse.json({ error: error.message })
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Checkout session error',
+    })
   }
 }
 
