@@ -92,8 +92,17 @@ const CreateFunnelPage: React.FC<CreateFunnelPageProps> = ({
 
       toast({
         title: 'Success',
-        description: 'Saves Funnel Page Details',
+        description: defaultData
+          ? 'Saves Funnel Page Details'
+          : 'Funnel page created. Opening in website builder.',
       })
+
+      if (!defaultData && response?.id) {
+        router.push(
+          `/subaccount/${subaccountId}/funnels/${funnelId}/editor/${response.id}`
+        )
+        return
+      }
       router.refresh()
     } catch (error) {
       console.log(error)

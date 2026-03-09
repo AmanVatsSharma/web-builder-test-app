@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-03-09
+
+### Subaccount Funnels to Website Builder Navigation
+
+- Fixed typo `transofrm` → `transform` in funnel-steps edit icon className.
+- Added explicit "Open in website builder" link on funnel detail page (Steps tab, right panel) so users can open the editor without relying on the thumbnail hover.
+- Added "Website builder" column to subaccount funnels table with "Edit" button linking to the first funnel page’s editor when the funnel has pages; shows "No pages" when empty.
+- After creating a new funnel page via "Create New Steps" modal, redirect to that page in the website builder instead of only refreshing.
+
 ## 2026-02-24
 
 ### Multi-Gateway Payments (Stripe + Razorpay)

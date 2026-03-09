@@ -181,8 +181,16 @@ const FunnelSteps = ({ funnel, funnelId, pages, subaccountId }: Props) => {
                       </div>
                       <LucideEdit
                         size={50}
-                        className="!text-muted-foreground absolute top-1/2 left-1/2 opacity-0 transofrm -translate-x-1/2 -translate-y-1/2 group-hover:opacity-100 transition-all duration-100"
+                        className="!text-muted-foreground absolute top-1/2 left-1/2 opacity-0 transform -translate-x-1/2 -translate-y-1/2 group-hover:opacity-100 transition-all duration-100"
                       />
+                    </Link>
+
+                    <Link
+                      href={`/subaccount/${subaccountId}/funnels/${funnelId}/editor/${clickedPage?.id}`}
+                      className="inline-flex items-center gap-2 mt-2 text-sm font-medium text-primary hover:underline"
+                    >
+                      <LucideEdit size={16} />
+                      Open in website builder
                     </Link>
 
                     <Link
