@@ -42,16 +42,20 @@ const ContactForm = ({ apiCall, subTitle, title }: Props) => {
   //CHALLENGE: We want to create tags for each leads that comes from the form
   
   return (
-    <Card className="max-w-[500px] w-[500px]">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{subTitle}</CardDescription>
+    <Card className="mx-auto w-full max-w-[560px] rounded-2xl border border-border/70 bg-card/95 shadow-editor-soft">
+      <CardHeader className="space-y-1 border-b border-border/70 pb-5">
+        <CardTitle className="text-2xl font-semibold tracking-tight">
+          {title}
+        </CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
+          {subTitle}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(apiCall)}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-5"
           >
             <FormField
               disabled={isLoading}
@@ -59,10 +63,13 @@ const ContactForm = ({ apiCall, subTitle, title }: Props) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Name
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Name"
+                      className="h-11 rounded-xl border-border/80 bg-background/90"
                       {...field}
                     />
                   </FormControl>
@@ -76,11 +83,14 @@ const ContactForm = ({ apiCall, subTitle, title }: Props) => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Email
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="email"
                       placeholder="Email"
+                      className="h-11 rounded-xl border-border/80 bg-background/90"
                       {...field}
                     />
                   </FormControl>
@@ -89,7 +99,7 @@ const ContactForm = ({ apiCall, subTitle, title }: Props) => {
               )}
             />
             <Button
-              className="mt-4"
+              className="mt-2 h-11 rounded-xl font-semibold tracking-tight shadow-editor-soft"
               disabled={isLoading}
               type="submit"
             >

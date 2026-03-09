@@ -7,19 +7,18 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { pricingCards } from '@/lib/constants'
-import { isStripeConfigured, stripe } from '@/lib/stripe'
+import { getPaymentProvider, normalizePaymentGateway } from '@/lib/payments'
 import clsx from 'clsx'
 import { Check } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
 export default async function Home() {
-  const prices = isStripeConfigured
-    ? await stripe.prices.list({
-        product: process.env.NEXT_PLURA_PRODUCT_ID,
-        active: true,
-      })
-    : null
+  const defaultGateway = normalizePaymentGateway(
+    process.env.NEXT_PUBLIC_DEFAULT_PAYMENT_GATEWAY || 'STRIPE'
+  )
+  const provider = getPaymentProvider(defaultGateway)
+  const prices = provider.isConfigured() ? await provider.listPlatformPrices() : []
 
   return (
     <>
@@ -53,10 +52,10 @@ export default async function Home() {
           ready to commit you can get started for free.
         </p>
         <div className="flex  justify-center gap-4 flex-wrap mt-6">
-          {prices?.data.map((card) => (
+          {prices.map((card) => (
             //WIP: Wire up free product from stripe
             <Card
-              key={card.nickname}
+              key={card.id}
               className={clsx('w-[300px] flex flex-col justify-between', {
                 'border-2 border-primary': card.nickname === 'Unlimited Saas',
               })}
@@ -78,10 +77,10 @@ export default async function Home() {
               </CardHeader>
               <CardContent>
                 <span className="text-4xl font-bold">
-                  {card.unit_amount && card.unit_amount / 100}
+                  {card.unitAmount ? card.unitAmount / 100 : 0}
                 </span>
                 <span className="text-muted-foreground">
-                  <span>/ {card.recurring?.interval}</span>
+                  <span>/ {card.interval}</span>
                 </span>
               </CardContent>
               <CardFooter className="flex flex-col items-start gap-4">

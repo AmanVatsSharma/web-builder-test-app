@@ -1,5 +1,5 @@
 'use client'
-import { Agency } from '@prisma/client'
+import { Agency, PaymentGateway } from '@prisma/client'
 import { useForm } from 'react-hook-form'
 import React, { useEffect, useState } from 'react'
 import { NumberInput } from '@tremor/react'
@@ -41,6 +41,13 @@ import FileUpload from '../global/file-upload'
 import { Input } from '../ui/input'
 import { Switch } from '../ui/switch'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
+import {
   deleteAgency,
   initUser,
   saveActivityLogsNotification,
@@ -58,6 +65,9 @@ const FormSchema = z.object({
   name: z.string().min(2, { message: 'Agency name must be atleast 2 chars.' }),
   companyEmail: z.string().min(1),
   companyPhone: z.string().min(1),
+  billingGateway: z.nativeEnum(PaymentGateway),
+  payoutGateway: z.nativeEnum(PaymentGateway),
+  payoutAccountId: z.string().optional(),
   whiteLabel: z.boolean(),
   address: z.string().min(1),
   city: z.string().min(1),
@@ -78,6 +88,9 @@ const AgencyDetails = ({ data }: Props) => {
       name: data?.name,
       companyEmail: data?.companyEmail,
       companyPhone: data?.companyPhone,
+      billingGateway: data?.billingGateway || PaymentGateway.STRIPE,
+      payoutGateway: data?.payoutGateway || PaymentGateway.STRIPE,
+      payoutAccountId: data?.payoutAccountId || data?.connectAccountId || '',
       whiteLabel: data?.whiteLabel || false,
       address: data?.address,
       city: data?.city,
@@ -91,7 +104,21 @@ const AgencyDetails = ({ data }: Props) => {
 
   useEffect(() => {
     if (data) {
-      form.reset(data)
+      form.reset({
+        address: data.address || '',
+        agencyLogo: data.agencyLogo || '',
+        billingGateway: data.billingGateway || PaymentGateway.STRIPE,
+        city: data.city || '',
+        companyEmail: data.companyEmail || '',
+        companyPhone: data.companyPhone || '',
+        country: data.country || '',
+        name: data.name || '',
+        payoutAccountId: data.payoutAccountId || data.connectAccountId || '',
+        payoutGateway: data.payoutGateway || PaymentGateway.STRIPE,
+        state: data.state || '',
+        whiteLabel: Boolean(data.whiteLabel),
+        zipCode: data.zipCode || '',
+      })
     }
   }, [data])
 
@@ -101,6 +128,7 @@ const AgencyDetails = ({ data }: Props) => {
       let custId
       if (!data?.id) {
         const bodyData = {
+          gateway: values.billingGateway,
           email: values.companyEmail,
           name: values.name,
           shipping: {
@@ -122,7 +150,7 @@ const AgencyDetails = ({ data }: Props) => {
           },
         }
 
-        const customerResponse = await fetch('/api/stripe/create-customer', {
+        const customerResponse = await fetch('/api/payments/create-customer', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -135,11 +163,16 @@ const AgencyDetails = ({ data }: Props) => {
       }
 
       newUserData = await initUser({ role: 'AGENCY_OWNER' })
-      if (!data?.customerId && !custId) return
+      const resolvedCustomerId =
+        data?.billingCustomerId || data?.customerId || custId || ''
+      if (!resolvedCustomerId) return
 
       const response = await upsertAgency({
         id: data?.id ? data.id : v4(),
-        customerId: data?.customerId || custId || '',
+        customerId: data?.customerId || resolvedCustomerId,
+        billingCustomerId: resolvedCustomerId,
+        billingGateway: values.billingGateway,
+        payoutGateway: values.payoutGateway,
         address: values.address,
         agencyLogo: values.agencyLogo,
         city: values.city,
@@ -152,7 +185,13 @@ const AgencyDetails = ({ data }: Props) => {
         createdAt: new Date(),
         updatedAt: new Date(),
         companyEmail: values.companyEmail,
-        connectAccountId: '',
+        connectAccountId:
+          values.payoutAccountId || data?.connectAccountId || '',
+        payoutAccountId:
+          values.payoutAccountId ||
+          data?.payoutAccountId ||
+          data?.connectAccountId ||
+          '',
         goal: 5,
       })
       toast({
@@ -282,6 +321,96 @@ const AgencyDetails = ({ data }: Props) => {
                   )}
                 />
               </div>
+              <div className="flex md:flex-row gap-4">
+                <FormField
+                  disabled={isLoading}
+                  control={form.control}
+                  name="billingGateway"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Billing Gateway</FormLabel>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select billing gateway" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={PaymentGateway.STRIPE}>
+                            Stripe
+                          </SelectItem>
+                          <SelectItem value={PaymentGateway.RAZORPAY}>
+                            Razorpay
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Select the gateway used for platform subscriptions.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  disabled={isLoading}
+                  control={form.control}
+                  name="payoutGateway"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Checkout Gateway</FormLabel>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select checkout gateway" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={PaymentGateway.STRIPE}>
+                            Stripe
+                          </SelectItem>
+                          <SelectItem value={PaymentGateway.RAZORPAY}>
+                            Razorpay
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Controls which gateway powers connected-account checkout.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                disabled={isLoading}
+                control={form.control}
+                name="payoutAccountId"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Gateway Account Id</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="acct_... or merchant account id"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      For Stripe this is optional (OAuth can auto-fill). For Razorpay
+                      add your Route/merchant account id here.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 disabled={isLoading}
