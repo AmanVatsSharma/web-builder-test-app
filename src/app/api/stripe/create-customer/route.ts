@@ -1,4 +1,4 @@
-import { stripe } from '@/lib/stripe'
+import { createGatewayCustomer } from '@/lib/payments/actions'
 import { StripeCustomerType } from '@/lib/types'
 import { NextResponse } from 'next/server'
 
@@ -11,13 +11,16 @@ export async function POST(req: Request) {
       status: 400,
     })
   try {
-    const customer = await stripe.customers.create({
-      email,
-      name,
-      address,
-      shipping,
-    })
-    return Response.json({ customerId: customer.id })
+    const customer = await createGatewayCustomer(
+      {
+        address,
+        email,
+        name,
+        shipping,
+      },
+      'STRIPE'
+    )
+    return NextResponse.json({ customerId: customer.customerId })
   } catch (error) {
     console.log('🔴 Error', error)
     return new NextResponse('Internal Server Error', { status: 500 })
