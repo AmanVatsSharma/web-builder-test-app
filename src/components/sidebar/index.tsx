@@ -1,5 +1,4 @@
 import { getAuthUserDetails } from '@/lib/queries'
-import { off } from 'process'
 import React from 'react'
 import MenuOptions from './menu-options'
 
@@ -38,12 +37,17 @@ const Sidebar = async ({ id, type }: Props) => {
       : user.Agency.SubAccount.find((subaccount) => subaccount.id === id)
           ?.SidebarOption || []
 
-  const subaccounts = user.Agency.SubAccount.filter((subaccount) =>
-    user.Permissions.find(
-      (permission) =>
-        permission.subAccountId === subaccount.id && permission.access
-    )
-  )
+  const isAgencyPrivileged =
+    user.role === 'AGENCY_OWNER' || user.role === 'AGENCY_ADMIN'
+
+  const subaccounts = isAgencyPrivileged
+    ? user.Agency.SubAccount
+    : user.Agency.SubAccount.filter((subaccount) =>
+        user.Permissions.find(
+          (permission) =>
+            permission.subAccountId === subaccount.id && permission.access
+        )
+      )
 
   return (
     <>
@@ -51,6 +55,7 @@ const Sidebar = async ({ id, type }: Props) => {
         defaultOpen={true}
         details={details}
         id={id}
+        type={type}
         sidebarLogo={sideBarLogo}
         sidebarOpt={sidebarOpt}
         subAccounts={subaccounts}
@@ -59,6 +64,7 @@ const Sidebar = async ({ id, type }: Props) => {
       <MenuOptions
         details={details}
         id={id}
+        type={type}
         sidebarLogo={sideBarLogo}
         sidebarOpt={sidebarOpt}
         subAccounts={subaccounts}

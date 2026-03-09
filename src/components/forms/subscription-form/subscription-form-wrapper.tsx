@@ -2,8 +2,8 @@
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/components/ui/use-toast'
 import { pricingCards } from '@/lib/constants'
+import { PaymentGatewayCode } from '@/lib/payments'
 import { useModal } from '@/providers/modal-provider'
-import { Plan } from '@prisma/client'
 import { StripeElementsOptions } from '@stripe/stripe-js'
 import clsx from 'clsx'
 import { useRouter } from 'next/navigation'
@@ -15,19 +15,51 @@ import SubscriptionForm from '.'
 
 type Props = {
   customerId: string
+  gateway: PaymentGatewayCode
   planExists: boolean
 }
 
-const SubscriptionFormWrapper = ({ customerId, planExists }: Props) => {
+type RazorpaySubscriptionCheckout = {
+  key: string
+  name: string
+  description: string
+  customerId: string
+  subscriptionId: string
+}
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void
+    }
+  }
+}
+
+const loadRazorpayScript = async () => {
+  if (typeof window === 'undefined') return false
+  if (window.Razorpay) return true
+
+  return new Promise<boolean>((resolve) => {
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
+
+const SubscriptionFormWrapper = ({ customerId, gateway, planExists }: Props) => {
   const { data, setClose } = useModal()
   const router = useRouter()
-  const [selectedPriceId, setSelectedPriceId] = useState<Plan | ''>(
+  const [selectedPriceId, setSelectedPriceId] = useState<string>(
     data?.plans?.defaultPriceId || ''
   )
   const [subscription, setSubscription] = useState<{
     subscriptionId: string
     clientSecret: string
   }>({ subscriptionId: '', clientSecret: '' })
+  const [razorpayCheckout, setRazorpayCheckout] =
+    useState<RazorpaySubscriptionCheckout | null>(null)
 
   const options: StripeElementsOptions = useMemo(
     () => ({
@@ -42,42 +74,83 @@ const SubscriptionFormWrapper = ({ customerId, planExists }: Props) => {
   useEffect(() => {
     if (!selectedPriceId) return
     const createSecret = async () => {
-      const subscriptionResponse = await fetch(
-        '/api/stripe/create-subscription',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            customerId,
-            priceId: selectedPriceId,
-          }),
-        }
-      )
-      const subscriptionResponseData = await subscriptionResponse.json()
-      setSubscription({
-        clientSecret: subscriptionResponseData.clientSecret,
-        subscriptionId: subscriptionResponseData.subscriptionId,
+      const subscriptionResponse = await fetch('/api/payments/create-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId,
+          gateway,
+          priceId: selectedPriceId,
+        }),
       })
-      if (planExists) {
+      const subscriptionResponseData = await subscriptionResponse.json()
+      if (!subscriptionResponse.ok) {
+        throw new Error(subscriptionResponseData?.error || 'Subscription failed')
+      }
+
+      if (subscriptionResponseData.mode === 'embedded') {
+        setSubscription({
+          clientSecret: subscriptionResponseData.clientSecret,
+          subscriptionId: subscriptionResponseData.subscriptionId,
+        })
+        setRazorpayCheckout(null)
+        if (planExists) {
+          toast({
+            title: 'Success',
+            description: 'Your plan has been successfully upgraded!',
+          })
+          setClose()
+          router.refresh()
+        }
+      } else if (subscriptionResponseData.mode === 'popup') {
+        setSubscription({ clientSecret: '', subscriptionId: '' })
+        setRazorpayCheckout(subscriptionResponseData.checkout)
+      }
+    }
+    createSecret().catch((error) => {
+      toast({
+        title: 'Payment setup failed',
+        variant: 'destructive',
+        description:
+          error instanceof Error ? error.message : 'Could not initialize payment',
+      })
+    })
+  }, [customerId, gateway, planExists, selectedPriceId])
+
+  const handleRazorpayCheckout = async () => {
+    if (!razorpayCheckout) return
+    const sdkLoaded = await loadRazorpayScript()
+    if (!sdkLoaded || !window.Razorpay) {
+      toast({
+        title: 'Razorpay SDK failed',
+        variant: 'destructive',
+        description: 'Could not load Razorpay checkout script.',
+      })
+      return
+    }
+
+    const checkout = new window.Razorpay({
+      ...razorpayCheckout,
+      handler: () => {
         toast({
-          title: 'Success',
-          description: 'Your plan has been successfully upgraded!',
+          title: 'Payment successful',
+          description: 'Your subscription payment has been captured.',
         })
         setClose()
         router.refresh()
-      }
-    }
-    createSecret()
-  }, [data, selectedPriceId, customerId])
+      },
+    })
+    checkout.open()
+  }
 
   return (
     <div className="border-none transition-all">
       <div className="flex flex-col gap-4">
         {data.plans?.plans.map((price) => (
           <Card
-            onClick={() => setSelectedPriceId(price.id as Plan)}
+            onClick={() => setSelectedPriceId(price.id)}
             key={price.id}
             className={clsx('relative cursor-pointer transition-all', {
               'border-primary': selectedPriceId === price.id,
@@ -103,7 +176,7 @@ const SubscriptionFormWrapper = ({ customerId, planExists }: Props) => {
           </Card>
         ))}
 
-        {options.clientSecret && !planExists && (
+        {options.clientSecret && !planExists && gateway === 'STRIPE' && (
           <>
             <h1 className="text-xl">Payment Method</h1>
             <Elements
@@ -115,7 +188,19 @@ const SubscriptionFormWrapper = ({ customerId, planExists }: Props) => {
           </>
         )}
 
-        {!options.clientSecret && selectedPriceId && (
+        {gateway === 'RAZORPAY' && razorpayCheckout && (
+          <button
+            type="button"
+            onClick={handleRazorpayCheckout}
+            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Continue with Razorpay
+          </button>
+        )}
+
+        {!options.clientSecret &&
+          selectedPriceId &&
+          !(gateway === 'RAZORPAY' && razorpayCheckout) && (
           <div className="flex items-center justify-center w-full h-40">
             <Loading />
           </div>
