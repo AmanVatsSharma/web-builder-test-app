@@ -12,7 +12,7 @@ const getStripeClient = (): Stripe => {
 
   if (!stripeClient) {
     stripeClient = new Stripe(stripeSecretKey, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2026-01-28.clover',
       appInfo: {
         name: 'Plura App',
         version: '0.1.0',
