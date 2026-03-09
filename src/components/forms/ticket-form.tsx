@@ -63,7 +63,7 @@ const TicketForm = ({ getNewTicket, laneId, subaccountId }: Props) => {
   const [contact, setContact] = useState('')
   const [search, setSearch] = useState('')
   const [contactList, setContactList] = useState<Contact[]>([])
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [allTeamMembers, setAllTeamMembers] = useState<User[]>([])
   const [assignedTo, setAssignedTo] = useState(
     defaultData.ticket?.Assigned?.id || ''

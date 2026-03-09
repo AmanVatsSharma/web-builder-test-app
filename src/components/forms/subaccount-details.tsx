@@ -26,17 +26,26 @@ import {
 } from '@/components/ui/card'
 
 import FileUpload from '../global/file-upload'
-import { Agency, SubAccount } from '@prisma/client'
+import { Agency, PaymentGateway, SubAccount } from '@prisma/client'
 import { useToast } from '../ui/use-toast'
 import { saveActivityLogsNotification, upsertSubAccount } from '@/lib/queries'
 import { useEffect } from 'react'
 import Loading from '../global/loading'
 import { useModal } from '@/providers/modal-provider'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const formSchema = z.object({
   name: z.string(),
   companyEmail: z.string(),
   companyPhone: z.string().min(1),
+  paymentGateway: z.nativeEnum(PaymentGateway),
+  paymentAccountId: z.string().optional(),
   address: z.string(),
   city: z.string(),
   subAccountLogo: z.string(),
@@ -72,6 +81,8 @@ const SubAccountDetails: React.FC<SubAccountDetailsProps> = ({
       name: details?.name,
       companyEmail: details?.companyEmail,
       companyPhone: details?.companyPhone,
+      paymentGateway: details?.paymentGateway || PaymentGateway.STRIPE,
+      paymentAccountId: details?.paymentAccountId || details?.connectAccountId || '',
       address: details?.address,
       city: details?.city,
       zipCode: details?.zipCode,
@@ -97,7 +108,14 @@ const SubAccountDetails: React.FC<SubAccountDetailsProps> = ({
         updatedAt: new Date(),
         companyEmail: values.companyEmail,
         agencyId: agencyDetails.id,
-        connectAccountId: '',
+        connectAccountId:
+          values.paymentAccountId || details?.connectAccountId || '',
+        paymentGateway: values.paymentGateway,
+        paymentAccountId:
+          values.paymentAccountId ||
+          details?.paymentAccountId ||
+          details?.connectAccountId ||
+          '',
         goal: 5000,
       })
       if (!response) throw new Error('No response from server')
@@ -125,7 +143,20 @@ const SubAccountDetails: React.FC<SubAccountDetailsProps> = ({
 
   useEffect(() => {
     if (details) {
-      form.reset(details)
+      form.reset({
+        address: details.address || '',
+        city: details.city || '',
+        companyEmail: details.companyEmail || '',
+        companyPhone: details.companyPhone || '',
+        country: details.country || '',
+        name: details.name || '',
+        paymentAccountId:
+          details.paymentAccountId || details.connectAccountId || '',
+        paymentGateway: details.paymentGateway || PaymentGateway.STRIPE,
+        state: details.state || '',
+        subAccountLogo: details.subAccountLogo || '',
+        zipCode: details.zipCode || '',
+      })
     }
   }, [details])
 
@@ -218,6 +249,52 @@ const SubAccountDetails: React.FC<SubAccountDetailsProps> = ({
                 )}
               />
             </div>
+            <FormField
+              disabled={isLoading}
+              control={form.control}
+              name="paymentGateway"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Checkout Gateway</FormLabel>
+                  <Select
+                    disabled={isLoading}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select checkout gateway" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={PaymentGateway.STRIPE}>Stripe</SelectItem>
+                      <SelectItem value={PaymentGateway.RAZORPAY}>
+                        Razorpay
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              disabled={isLoading}
+              control={form.control}
+              name="paymentAccountId"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Gateway Account Id</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="acct_... or merchant account id"
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               disabled={isLoading}
