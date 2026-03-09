@@ -263,7 +263,10 @@ export const initUser = async (newUser: Partial<User>) => {
   return userData
 }
 
-export const upsertAgency = async (agency: Agency, price?: Plan) => {
+export const upsertAgency = async (
+  agency: Prisma.AgencyUncheckedCreateInput,
+  price?: Plan
+) => {
   if (!agency.companyEmail) return null
   try {
     const agencyDetails = await db.agency.upsert({
@@ -333,7 +336,9 @@ export const getNotificationAndUser = async (agencyId: string) => {
   }
 }
 
-export const upsertSubAccount = async (subAccount: SubAccount) => {
+export const upsertSubAccount = async (
+  subAccount: Prisma.SubAccountUncheckedCreateInput
+) => {
   if (!subAccount.companyEmail) return null
   const agencyOwner = await db.user.findFirst({
     where: {

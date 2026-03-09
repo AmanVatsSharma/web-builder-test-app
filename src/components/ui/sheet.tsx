@@ -51,6 +51,7 @@ const sheetVariants = cva(
 
 interface CustomSheetContentProps {
   showX?: boolean
+  showOverlay?: boolean
 }
 
 interface SheetContentProps
@@ -61,9 +62,20 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = 'right', className, showX, children, ...props }, ref) => (
+>(
+  (
+    {
+      side = 'right',
+      className,
+      showX,
+      showOverlay = true,
+      children,
+      ...props
+    },
+    ref
+  ) => (
   <SheetPortal>
-    <SheetOverlay />
+    {showOverlay && <SheetOverlay />}
     <SheetPrimitive.Content
       ref={ref}
       className={cn(sheetVariants({ side }), className)}
